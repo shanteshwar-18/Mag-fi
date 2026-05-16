@@ -1,0 +1,23 @@
+# Android build outputs
+*.apk
+*.ap_
+*.dex
+*.class
+
+# Gradle
+.gradle/
+build/
+local.properties
+
+# IDE
+.idea/
+*.iml
+*.iws
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Prompt book extracted text (not needed in repo)
+Application 1/promptbook_content.txt
+Application 1/promptbook_full.txt

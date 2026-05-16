@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Mag-Fi Mapper</string>
+    <string name="title_setup">Setup</string>
+    <string name="title_mapping">Mapping</string>
+    <string name="hint_mapper_name">Mapper Name</string>
+    <string name="hint_building_name">Building Name</string>
+    <string name="hint_floor_name">Floor Name/Number</string>
+    <string name="hint_start_landmark">Starting Landmark</string>
+    <string name="btn_start_mapping">START MAPPING</string>
+    <string name="btn_stop_mapping">STOP MAPPING</string>
+    <string name="btn_export_csv">EXPORT CSV</string>
+    <string name="label_heading">HEADING</string>
+    <string name="label_steps">STEPS</string>
+    <string name="label_pos_x">X (m)</string>
+    <string name="label_pos_y">Y (m)</string>
+    <string name="label_mag">MAG (µT)</string>
+    <string name="label_rows">ROWS</string>
+    <string name="label_wifi">WI-FI FINGERPRINT</string>
+    <string name="status_recording">RECORDING</string>
+    <string name="status_stopped">STOPPED</string>
+    <string name="calibration_title">Stand still for calibration</string>
+    <string name="calibration_status">Averaging magnetic field...</string>
+    <string name="snackbar_fill_fields">Please fill in all fields.</string>
+    <string name="channel_name">Mag-Fi Mapping</string>
+    <string name="notif_title">Mag-Fi Mapper — Recording</string>
+    <string name="notif_text">Collecting fingerprint data...</string>
+    <string name="notif_stop">Stop</string>
+    <string name="before_recording_title">Before Recording</string>
+    <string name="before_recording_body">Stand still at your starting landmark for 2–3 seconds after pressing Start. The app will calibrate its initial heading. Keep the phone flat and away from metal objects.</string>
+    <string name="app_subtitle">Indoor Fingerprint Data Collector</string>
+    <string name="wifi_permission_denied">Wi-Fi scanning requires location permission. App cannot function.</string>
+    <string name="ok">OK</string>
+    <string name="share_csv">Share CSV</string>
+</resources>

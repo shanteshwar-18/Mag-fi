@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:paddingVertical="6dp">
+
+    <TextView
+        android:id="@+id/tvSsid"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="2"
+        android:textColor="#E0F7FA"
+        android:textSize="13sp"
+        android:ellipsize="end"
+        android:maxLines="1" />
+
+    <ProgressBar
+        android:id="@+id/pbRssi"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="0dp"
+        android:layout_height="8dp"
+        android:layout_weight="2"
+        android:layout_marginHorizontal="8dp"
+        android:max="100"
+        android:progressTint="#14FFEC"
+        android:progressBackgroundTint="#546E7A" />
+
+    <TextView
+        android:id="@+id/tvRssi"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="#14FFEC"
+        android:textSize="12sp"
+        android:typeface="monospace"
+        android:minWidth="50dp"
+        android:gravity="end" />
+
+</LinearLayout>
