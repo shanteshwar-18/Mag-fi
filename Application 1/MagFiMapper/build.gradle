@@ -1,17 +1,18 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// Top-level build file for MagFiMapper.
+// AGP 8.9.1 → requires Gradle 8.11.1 (set in gradle-wrapper.properties)
+
 buildscript {
-    ext.kotlin_version = '1.9.22'
+    ext.kotlin_version = '2.0.21'
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:8.2.2'
+        classpath 'com.android.tools.build:gradle:8.9.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // SafeArgs — must match navigation library version exactly
         classpath 'androidx.navigation:navigation-safe-args-gradle-plugin:2.7.7'
     }
 }
 
-task clean(type: Delete) {
-    delete rootProject.buildDir
-}
+// 'task clean' is deprecated in AGP 8+; removed to avoid ExternalApiUsageException
