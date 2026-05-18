@@ -110,10 +110,10 @@ class MappingFragment : Fragment() {
                 binding.btnStart.alpha = 1.0f
                 binding.btnStop.isEnabled = false
                 binding.btnStop.alpha = 0.4f
-                // Export enabled only if there are rows
-                val hasData = (vm.rowCount.value ?: 0) > 1
-                binding.btnExport.isEnabled = hasData
-                binding.btnExport.alpha = if (hasData) 1.0f else 0.4f
+                // BUG FIX #3: always enable export after STOP so the user can always save.
+                // The row-count check was racing with stopRecording() and always saw 0.
+                binding.btnExport.isEnabled = true
+                binding.btnExport.alpha = 1.0f
             }
         }
 

@@ -14,8 +14,10 @@ import com.magfi.mapper.core.SensorEngine
 import com.magfi.mapper.core.StepDetector
 import com.magfi.mapper.core.WifiScanner
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
 import java.io.File
 
 /**
@@ -65,6 +67,10 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
 
     private var engineStarted = false
 
+    // BUG FIX #2: dedicated job to poll rowCount every second so the UI always reflects
+    // rows written by the timer-based trigger in DataLogger (not just step-based rows)
+    private var rowPollJob: Job? = null
+
     // ── ENGINE MANAGEMENT ─────────────────────────────────────────────────
     fun startEngine() {
         if (engineStarted) return
@@ -74,24 +80,27 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
             override fun onAccelUpdate(ax: Float, ay: Float, az: Float) {
                 accelData.postValue(Triple(ax, ay, az))
 
-                // Update step detector
+                // Feed step detector — only update UI/logger when recording is active
                 stepDetector.processSample(ax, ay, az, object : StepDetector.Listener {
                     override fun onStepDetected(count: Int) {
+                        // Only count steps while recording is active
+                        if (isRecording.value != true) return
+
                         // Update position on step
                         pdrTracker.onStep(headingEstimator.getCurrentHeading())
                         val pos = pdrTracker.getPosition()
 
                         stepCount.postValue(count)
-                        posX.postValue(pos.x + 0f)  // normalize -0f
-                        posY.postValue(pos.y + 0f)
+                        posX.postValue(pos.x)
+                        posY.postValue(pos.y)
 
-                        // Update data logger state and trigger step-based row
+                        // Sync state into DataLogger and trigger a step-based row
                         dataLogger.stepCount = count
-                        dataLogger.posX = pos.x + 0f
-                        dataLogger.posY = pos.y + 0f
+                        dataLogger.posX = pos.x
+                        dataLogger.posY = pos.y
                         dataLogger.heading = headingEstimator.getCurrentHeading()
                         dataLogger.onStep()
-                        rowCount.postValue(dataLogger.getRowCount())
+                        // rowCount UI update handled by rowPollJob — no need to post here
                     }
                 })
             }
@@ -101,10 +110,7 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
                 latestBx = bx
                 latestBy = by
 
-                // Calibration sampling
-                headingEstimator.calibrate(bx, by)
-
-                // Update heading
+                // Always process heading (needed before recording for display)
                 headingEstimator.processMag(bx, by, object : HeadingEstimator.Listener {
                     override fun onHeadingUpdate(degrees: Float) {
                         heading.postValue(degrees)
@@ -112,7 +118,7 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
                     }
                 })
 
-                // Update mag in data logger
+                // Keep mag values in logger updated
                 dataLogger.magX = bx
                 dataLogger.magY = by
                 dataLogger.magZ = bz
@@ -158,7 +164,7 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
                 calibrationState.postValue(CalibrationState.Counting(1))
                 delay(1000L)
 
-                // Trigger heading calibration with current mag readings
+                // Freeze the latest heading as reference calibration point
                 headingEstimator.reset()
                 repeat(10) {
                     headingEstimator.calibrate(latestBx, latestBy)
@@ -172,11 +178,23 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
                 dataLogger.clear()
                 dataLogger.startLogging(scope)
 
+                // Reset UI counters
                 stepCount.postValue(0)
                 posX.postValue(0f)
                 posY.postValue(0f)
                 rowCount.postValue(0)
                 isRecording.postValue(true)
+
+                // BUG FIX #2: poll rowCount every second so UI always reflects timer-logged rows
+                rowPollJob?.cancel()
+                rowPollJob = scope.launch {
+                    while (isActive && isRecording.value == true) {
+                        delay(1000L)
+                        if (isRecording.value == true) {
+                            rowCount.postValue(dataLogger.getRowCount())
+                        }
+                    }
+                }
 
                 // Start foreground service
                 val intent = Intent(getApplication(), MappingForegroundService::class.java).apply {
@@ -192,9 +210,15 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
     }
 
     fun stopRecording() {
+        rowPollJob?.cancel()
+        rowPollJob = null
+
         dataLogger.stopLogging()
         isRecording.postValue(false)
         calibrationState.postValue(CalibrationState.Idle)
+
+        // Final row count after stop (includes all timer-based rows)
+        rowCount.postValue(dataLogger.getRowCount())
 
         // Stop foreground service
         val intent = Intent(getApplication(), MappingForegroundService::class.java).apply {
@@ -207,9 +231,12 @@ class SensorViewModel(application: Application) : AndroidViewModel(application) 
         return dataLogger.exportCsv(context, mapperName, buildingName, floorName)
     }
 
+    fun getDataLogger() = dataLogger
+
     // ── LIFECYCLE ──────────────────────────────────────────────────────────
     override fun onCleared() {
         super.onCleared()
+        rowPollJob?.cancel()
         stopRecording()
         stopEngine()
     }
