@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Location — required for Wi-Fi scanning (Android 9+) -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+
+    <!-- Wi-Fi -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+
+    <!-- Required sensors -->
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true" />
+    <uses-feature android:name="android.hardware.sensor.magnetic_field" android:required="true" />
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="false" />
+
+    <application
+        android:label="Mag-Fi Navigator"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:theme="@style/Theme.MagFiNavigator"
+        android:supportsRtl="true"
+        android:allowBackup="true">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+    </application>
+
+</manifest>

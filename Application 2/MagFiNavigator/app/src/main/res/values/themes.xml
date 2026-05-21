@@ -1,0 +1,16 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base dark Material3 theme -->
+    <style name="Theme.MagFiNavigator" parent="Theme.Material3.Dark.NoActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorOnPrimary">@color/colorOnPrimary</item>
+        <item name="colorSecondary">@color/colorSecondary</item>
+        <item name="colorOnSecondary">@color/colorPrimary</item>
+        <item name="colorSurface">@color/colorSurface</item>
+        <item name="colorOnSurface">@color/colorOnPrimary</item>
+        <item name="android:colorBackground">@color/colorBackground</item>
+        <item name="colorError">@color/colorError</item>
+        <item name="android:statusBarColor">@color/colorPrimary</item>
+        <item name="android:navigationBarColor">@color/colorPrimary</item>
+        <item name="android:windowBackground">@color/colorBackground</item>
+    </style>
+</resources>

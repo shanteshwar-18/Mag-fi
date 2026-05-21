@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.magfi.navigator.ui.HomeFragment"
+        android:label="HomeFragment"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_navigationFragment"
+            app:destination="@id/navigationFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/navigationFragment"
+        android:name="com.magfi.navigator.ui.NavigationFragment"
+        android:label="NavigationFragment"
+        tools:layout="@layout/fragment_navigation">
+        <argument
+            android:name="destinationName"
+            app:argType="string"
+            android:defaultValue="" />
+    </fragment>
+
+</navigation>

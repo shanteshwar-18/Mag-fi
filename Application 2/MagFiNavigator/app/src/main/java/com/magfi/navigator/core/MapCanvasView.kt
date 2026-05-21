@@ -1,0 +1,277 @@
+package com.magfi.navigator.core
+
+import android.animation.ValueAnimator
+import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Canvas
+import android.graphics.Color
+import android.graphics.DashPathEffect
+import android.graphics.Paint
+import android.graphics.Path
+import android.graphics.RectF
+import android.util.AttributeSet
+import android.view.GestureDetector
+import android.view.MotionEvent
+import android.view.ScaleGestureDetector
+import android.view.View
+import android.view.animation.LinearInterpolator
+import kotlin.math.pow
+import kotlin.math.sqrt
+
+/**
+ * MapCanvasView — custom View that renders the indoor navigation map.
+ *
+ * Four rendering layers (drawn in order):
+ *   1. Floor plan bitmap  — scaled to fill the view
+ *   2. Route polyline     — dashed teal line through GraphNodes
+ *   3. Graph node circles — amber waypoints + teal destination
+ *   4. Blue Dot           — animated pulse rings at user position
+ *
+ * Also supports:
+ *   - Pinch-to-zoom (ScaleGestureDetector)
+ *   - Pan (GestureDetector.onScroll)
+ *   - Follow mode (auto-center on Blue Dot)
+ *   - Re-center via public API
+ */
+class MapCanvasView @JvmOverloads constructor(
+    context: Context,
+    attrs: AttributeSet? = null
+) : View(context, attrs) {
+
+    // ── Public properties — set from NavigationFragment ───────────────────────
+    var floorBitmap: Bitmap? = null
+    var scalePxPerMeter: Float = 50f
+    var originPixelX: Float = 0f
+    var originPixelY: Float = 0f
+    var userPosX: Float = 0f    // in meters
+    var userPosY: Float = 0f    // in meters
+    var routeNodes: List<GraphNode> = emptyList()
+    var showNodeLabels: Boolean = true
+
+    // ── Zoom / Pan state ─────────────────────────────────────────────────────
+    private var scaleFactor = 1.5f
+    private var translateX  = 0f
+    private var translateY  = 0f
+    private val MIN_SCALE   = 0.8f
+    private val MAX_SCALE   = 5.0f
+    private var pivotX      = 0f
+    private var pivotY      = 0f
+
+    /** When true, the view auto-centers on the Blue Dot after each position update. */
+    var followMode: Boolean = true
+
+    // ── Blue Dot pulse animation ──────────────────────────────────────────────
+    private var pulseRadius = 22f
+    private val pulseAnimator: ValueAnimator = ValueAnimator.ofFloat(22f, 34f).apply {
+        duration       = 1200
+        repeatCount    = ValueAnimator.INFINITE
+        repeatMode     = ValueAnimator.REVERSE
+        interpolator   = LinearInterpolator()
+        addUpdateListener { pulseRadius = it.animatedValue as Float; invalidate() }
+    }
+
+    // ── Paints ────────────────────────────────────────────────────────────────
+    private val routePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color       = Color.parseColor("#14FFEC")
+        strokeWidth = 8f
+        style       = Paint.Style.STROKE
+        pathEffect  = DashPathEffect(floatArrayOf(20f, 10f), 0f)
+    }
+    private val nodeAmberPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#FFB300")
+        style = Paint.Style.FILL
+    }
+    private val nodeDestPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#14FFEC")
+        style = Paint.Style.FILL
+    }
+    private val nodeLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color     = Color.parseColor("#E0F7FA")
+        textSize  = 28f
+        textAlign = Paint.Align.CENTER
+    }
+    private val dotPulsePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#662979FF")
+        style = Paint.Style.FILL
+    }
+    private val dotMainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.parseColor("#2979FF")
+        style = Paint.Style.FILL
+    }
+    private val dotCorePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = Color.WHITE
+        style = Paint.Style.FILL
+    }
+    private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color       = Color.parseColor("#220D2137")
+        strokeWidth = 1f
+        style       = Paint.Style.STROKE
+    }
+
+    // ── Gesture detectors ─────────────────────────────────────────────────────
+    private val scaleDetector = ScaleGestureDetector(context,
+        object : ScaleGestureDetector.SimpleOnScaleGestureListener() {
+            override fun onScaleBegin(detector: ScaleGestureDetector): Boolean {
+                pivotX = detector.focusX
+                pivotY = detector.focusY
+                return true
+            }
+            override fun onScale(detector: ScaleGestureDetector): Boolean {
+                val newScale = (scaleFactor * detector.scaleFactor).coerceIn(MIN_SCALE, MAX_SCALE)
+                // Adjust translation to zoom toward pinch center
+                translateX -= (pivotX - translateX) * (newScale / scaleFactor - 1f)
+                translateY -= (pivotY - translateY) * (newScale / scaleFactor - 1f)
+                scaleFactor = newScale
+                invalidate()
+                return true
+            }
+        })
+
+    private val gestureDetector = GestureDetector(context,
+        object : GestureDetector.SimpleOnGestureListener() {
+            override fun onScroll(
+                e1: MotionEvent?, e2: MotionEvent,
+                distanceX: Float, distanceY: Float
+            ): Boolean {
+                translateX -= distanceX
+                translateY -= distanceY
+                followMode = false   // user panned — disable auto-follow
+                invalidate()
+                return true
+            }
+        })
+
+    init {
+        pulseAnimator.start()
+    }
+
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (!pulseAnimator.isRunning) pulseAnimator.start()
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        pulseAnimator.cancel()
+    }
+
+    // ── Public update methods ─────────────────────────────────────────────────
+
+    fun updatePosition(x: Float, y: Float) {
+        userPosX = x
+        userPosY = y
+        if (followMode) centerViewOnDot()
+        invalidate()
+    }
+
+    fun updateRoute(nodes: List<GraphNode>) {
+        routeNodes = nodes
+        followMode = true   // reset follow mode when a new route is set
+        invalidate()
+    }
+
+    /** Programmatically re-center view on the Blue Dot. */
+    fun recenter(zoom: Float = 2f) {
+        scaleFactor = zoom.coerceIn(MIN_SCALE, MAX_SCALE)
+        followMode  = true
+        centerViewOnDot()
+        invalidate()
+    }
+
+    // ── Touch handling ────────────────────────────────────────────────────────
+
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        var consumed = scaleDetector.onTouchEvent(event)
+        consumed = gestureDetector.onTouchEvent(event) || consumed
+        return consumed || super.onTouchEvent(event)
+    }
+
+    // ── Canvas rendering ──────────────────────────────────────────────────────
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        canvas.save()
+        canvas.translate(translateX, translateY)
+        canvas.scale(scaleFactor, scaleFactor, pivotX - translateX, pivotY - translateY)
+
+        drawFloorPlan(canvas)
+        drawRouteLine(canvas)
+        drawGraphNodes(canvas)
+        drawBlueDot(canvas)
+
+        canvas.restore()
+    }
+
+    private fun drawFloorPlan(canvas: Canvas) {
+        val bmp = floorBitmap ?: run {
+            // No bitmap — draw placeholder dark background with grid
+            canvas.drawColor(Color.parseColor("#0D2137"))
+            val step = 50f
+            var x = 0f
+            while (x < width) { canvas.drawLine(x, 0f, x, height.toFloat(), gridPaint); x += step }
+            var y = 0f
+            while (y < height) { canvas.drawLine(0f, y, width.toFloat(), y, gridPaint); y += step }
+            return
+        }
+        val rect = RectF(0f, 0f, width.toFloat() / scaleFactor, height.toFloat() / scaleFactor)
+        canvas.drawBitmap(bmp, null, rect, null)
+    }
+
+    private fun drawRouteLine(canvas: Canvas) {
+        if (routeNodes.size < 2) return
+        val path = Path()
+        val (fx, fy) = metersToCanvas(routeNodes[0].x, routeNodes[0].y)
+        path.moveTo(fx, fy)
+        for (i in 1 until routeNodes.size) {
+            val (nx, ny) = metersToCanvas(routeNodes[i].x, routeNodes[i].y)
+            path.lineTo(nx, ny)
+        }
+        canvas.drawPath(path, routePaint)
+    }
+
+    private fun drawGraphNodes(canvas: Canvas) {
+        for ((index, node) in routeNodes.withIndex()) {
+            val (cx, cy) = metersToCanvas(node.x, node.y)
+            val isDestination = index == routeNodes.lastIndex
+            val paint  = if (isDestination) nodeDestPaint else nodeAmberPaint
+            val radius = if (isDestination) 18f else 12f
+            canvas.drawCircle(cx, cy, radius, paint)
+            if (showNodeLabels) {
+                canvas.drawText(node.id.replace("_", " "), cx, cy - radius - 6f, nodeLabelPaint)
+            }
+        }
+    }
+
+    private fun drawBlueDot(canvas: Canvas) {
+        val (dotX, dotY) = metersToCanvas(userPosX, userPosY)
+
+        // Outer animated pulse ring
+        canvas.drawCircle(dotX, dotY, pulseRadius, dotPulsePaint)
+        // Main dot
+        canvas.drawCircle(dotX, dotY, 18f, dotMainPaint)
+        // Inner white core
+        canvas.drawCircle(dotX, dotY, 7f, dotCorePaint)
+    }
+
+    // ── Coordinate helpers ────────────────────────────────────────────────────
+
+    /**
+     * Convert PDR meters → canvas pixels for the current view size.
+     * Accounts for floor plan being drawn scaled to the unzoomed view.
+     */
+    private fun metersToCanvas(xMeters: Float, yMeters: Float): Pair<Float, Float> {
+        val bmp = floorBitmap
+        val scaleX = if (bmp != null) (width.toFloat() / scaleFactor) / bmp.width  else 1f
+        val scaleY = if (bmp != null) (height.toFloat() / scaleFactor) / bmp.height else 1f
+        val canvasX = (originPixelX + xMeters * scalePxPerMeter) * scaleX
+        val canvasY = (originPixelY - yMeters * scalePxPerMeter) * scaleY
+        return Pair(canvasX, canvasY)
+    }
+
+    /** Compute translation so Blue Dot is centered in the view. */
+    private fun centerViewOnDot() {
+        val (dotCanvasX, dotCanvasY) = metersToCanvas(userPosX, userPosY)
+        translateX = width  / 2f - dotCanvasX * scaleFactor
+        translateY = height / 2f - dotCanvasY * scaleFactor
+    }
+}

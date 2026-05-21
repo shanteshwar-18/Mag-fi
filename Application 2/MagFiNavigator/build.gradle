@@ -1,0 +1,25 @@
+// Top-level build file for MagFiNavigator — App 2
+// AGP 8.9.1 + Kotlin 2.0.21
+
+buildscript {
+    ext.kotlin_version = '2.0.21'
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()   // required for SQLiteAssetHelper 2.0.1
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:8.9.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+        // SafeArgs — must match navigation library version exactly
+        classpath 'androidx.navigation:navigation-safe-args-gradle-plugin:2.7.7'
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+        jcenter()   // required for SQLiteAssetHelper 2.0.1
+    }
+}

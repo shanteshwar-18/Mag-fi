@@ -1,0 +1,17 @@
+<resources>
+    <string name="app_name">Mag-Fi Navigator</string>
+    <string name="search_hint">Search destination...</string>
+    <string name="navigate">Navigate</string>
+    <string name="re_route">Re-route</string>
+    <string name="clear">Clear</string>
+    <string name="map_loaded">Map loaded — Floor 1</string>
+    <string name="select_destination">Please select a destination.</string>
+    <string name="location_permission_title">Location Permission Required</string>
+    <string name="location_permission_body">Wi-Fi scanning for indoor positioning requires location access.\nThe app will work in PDR-only mode without it.</string>
+    <string name="grant_permission">GRANT PERMISSION</string>
+    <string name="continue_anyway">CONTINUE ANYWAY</string>
+    <string name="accuracy_fused">FUSED</string>
+    <string name="accuracy_pdr_only">PDR ONLY</string>
+    <string name="low_accuracy_warning">⚠ Low accuracy — move near mapped area</string>
+    <string name="re_center">Re-center</string>
+</resources>
