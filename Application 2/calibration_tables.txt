@@ -1,0 +1,164 @@
+﻿=== TABLE 0 ===
+MAG-FI NAVIGATOR | APP 2  ┬╖  MAP CALIBRATION & REAL ASSET INTEGRATION | Floor 3 ┬╖ Block C (Lab Wing) ┬╖ 40m Corridor | Team Antigravity Task Tickets ΓÇö 3 Tasks ┬╖ Sequential Execution
+
+=== TABLE 1 ===
+3 | Task Tickets || 20 | Graph Nodes || 19 | Edges || ~3 hrs | Implementation
+
+=== TABLE 2 ===
+ΓûÉ  FLOOR PLAN REFERENCE DATA | Block C ┬╖ Lab Wing ┬╖ Floor 3 ΓÇö Extract from actual blueprint image
+
+=== TABLE 3 ===
+Parameter || Value
+Image file || floor_plan.png  (1024 ├ù 1536 px)
+Total corridor length || 40.0 m (Y-axis, bottom ΓåÆ top)
+Corridor width || 1.8 m (X-axis, 0 ΓåÆ 1.8)
+Room depth (most labs) || 6.0 m (X-axis, 1.8 ΓåÆ 7.8)
+Total building width || 7.8 m
+Origin (0,0) || Entrance center ΓÇö bottom of corridor
+Axis: +Y || North (up the corridor toward staircase)
+Axis: +X || East (into rooms, right side of image)
+Pixel origin (image coords) || approx (310, 1370)  [top-left = (0,0)]
+Scale: Y-axis || 31.9 px/m  (1275 px ├╖ 40.0 m)
+Scale: X-axis || 49.4 px/m  (385 px ├╖ 7.8 m ΓÇö image non-square)
+
+=== TABLE 4 ===
+Room / Feature || Y position (m from entrance) ┬╖ Room height
+Entrance / Origin (0,0) || Y = 0.0 m
+1324 ΓÇö Classroom || Y = 0.0 ΓåÆ 8.5 m  (8.5 m tall room)
+1323D ΓÇö Lab || Y = 8.5 ΓåÆ 12.5 m  (4.0 m)
+1323 B & C ΓÇö shared corridor || Y = 12.5 ΓåÆ 14.0 m  (1.5 m)
+1323A ΓÇö Lab || Y = 14.0 ΓåÆ 18.0 m  (4.0 m)
+1322 ΓÇö HOD Cabin || Y = 18.0 ΓåÆ 20.5 m  (2.5 m)
+1321D ΓÇö Lab || Y = 20.5 ΓåÆ 24.5 m  (4.0 m)
+1321 B & C ΓÇö shared corridor || Y = 24.5 ΓåÆ 26.0 m  (1.5 m)
+1321A ΓÇö Lab || Y = 26.0 ΓåÆ 30.0 m  (4.0 m)
+1320 ΓÇö Staff Room || Y = 30.0 ΓåÆ 34.0 m  (4.0 m)
+Staircase (top) || Y = 34.0 ΓåÆ 40.0 m  (6.0 m)
+
+=== TABLE 5 ===
+T1 || Asset Replacement & Pixel Scale Calibration | ΓÅ▒ ~45 minutes   ┬╖   Priority: CRITICAL
+
+=== TABLE 6 ===
+ΓÜá  The image is 1024├ù1536 px but uses DIFFERENT px/m ratios on X and Y axes (31.9 vs 49.4). The canvas scaling formula in FloorPlanManager and MapCanvasView must account for this. Do NOT use a single scalePxPerMeter ΓÇö use separate scaleX and scaleY.
+
+=== TABLE 7 ===
+1. Delete the old placeholder from: |        app/src/main/assets/floor_plan.png |  | 2. Take the new blueprint image (the one provided by Team Antigravity). |    Rename it exactly: floor_plan.png |    Place it in: app/src/main/assets/floor_plan.png |  | 3. Verify in Android Studio project tree: |    app > src > main > assets > floor_plan.png   ΓåÉ must exist |  | 4. Clean & Rebuild: |    ./gradlew clean assembleDebug
+
+=== TABLE 8 ===
+// ΓöÇΓöÇ FloorPlanManager.kt ΓÇö REPLACE the entire calibration constants block ΓöÇΓöÇΓöÇΓöÇ |  | companion object { |     // ΓöÇΓöÇ Image dimensions (do NOT change unless you resize the PNG) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     const val IMAGE_WIDTH_PX  = 1024f |     const val IMAGE_HEIGHT_PX = 1536f |  |     // ΓöÇΓöÇ Physical building dimensions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     const val CORRIDOR_LENGTH_M = 40.0f    // Y-axis: entrance ΓåÆ staircase |     const val BUILDING_WIDTH_M  =  7.8f    // X-axis: left wall ΓåÆ right wall |  |     // ΓöÇΓöÇ Pixel coordinates of key points IN THE IMAGE (top-left = 0,0) ΓöÇΓöÇΓöÇΓöÇΓöÇ |     // These are the pixel positions read from the actual floor_plan.png. |     // If you resize the PNG, these values MUST be recalculated. |     const val ORIGIN_PX_X =  310f    // X pixel of entrance center |     const val ORIGIN_PX_Y = 1370f    // Y pixel of entrance center (image coords) |  |     // Staircase top (40m North of entrance): |     const val STAIR_PX_X  =  310f    // same X ΓÇö it's directly above entrance |     const val STAIR_PX_Y  =   95f    // Y pixel at top of corridor |  |     // ΓöÇΓöÇ Derived scale factors ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     // Y scale: how many pixels = 1 meter (corridor length axis) |     //   = (ORIGIN_PX_Y - STAIR_PX_Y) / CORRIDOR_LENGTH_M |     //   = (1370 - 95) / 40.0 = 31.875 px/m |     const val SCALE_Y_PX_PER_M = (ORIGIN_PX_Y - STAIR_PX_Y) / CORRIDOR_LENGTH_M |     //   Result: 31.875f |  |     // X scale: right edge of building minus corridor left edge divided by 7.8m |     // Left wall pixel ~ 235px, right wall pixel ~ 620px ΓåÆ span = 385px |     const val LEFT_WALL_PX   = 235f |     const val RIGHT_WALL_PX  = 620f |     const val SCALE_X_PX_PER_M = (RIGHT_WALL_PX - LEFT_WALL_PX) / BUILDING_WIDTH_M |     //   Result: ~49.36f | }
+
+=== TABLE 9 ===
+// ΓöÇΓöÇ FloorPlanManager.kt ΓÇö REPLACE metersToPixels() ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |  | // Converts PDR meter coordinates (x,y) to image pixel coordinates. | // NOTE: image coordinates have Y increasing DOWNWARD, PDR Y increases NORTHWARD. | // So: image_py = ORIGIN_PX_Y - (y_meters * SCALE_Y_PX_PER_M) | fun metersToPixels(xMeters: Float, yMeters: Float): Pair<Float, Float> { |     val imagePx = ORIGIN_PX_X + (xMeters * SCALE_X_PX_PER_M) |     val imagePy = ORIGIN_PX_Y - (yMeters * SCALE_Y_PX_PER_M) |     return Pair(imagePx, imagePy) | } |  | // Inverse: converts image pixel (px, py) back to meter coordinates. | fun pixelsToMeters(px: Float, py: Float): Pair<Float, Float> { |     val xMeters = (px - ORIGIN_PX_X) / SCALE_X_PX_PER_M |     val yMeters = (ORIGIN_PX_Y - py) / SCALE_Y_PX_PER_M |     return Pair(xMeters, yMeters) | } |  | // ΓöÇΓöÇ MapCanvasView.kt ΓÇö REPLACE metersToCanvas() ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // The canvas stretches the bitmap to fill the View. | // Extra scale factors account for View size vs image size. | // | // fun metersToCanvas(xMeters: Float, yMeters: Float): Pair<Float, Float> { | //     val bmp = floorBitmap ?: return Pair(0f, 0f) | //     val viewScaleX = width.toFloat()  / bmp.width.toFloat() | //     val viewScaleY = height.toFloat() / bmp.height.toFloat() | //     val (imagePx, imagePy) = floorPlanManager.metersToPixels(xMeters, yMeters) | //     return Pair(imagePx * viewScaleX, imagePy * viewScaleY) | // }
+
+=== TABLE 10 ===
+// ΓöÇΓöÇ NavigationViewModel.kt ΓÇö in init {} block ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // Replace the old placeholder calibration call with these exact values: |  | floorPlanManager.originPixelX = FloorPlanManager.ORIGIN_PX_X  // 310f | floorPlanManager.originPixelY = FloorPlanManager.ORIGIN_PX_Y  // 1370f |  | // No need to call setScaleFromTwoPoints() anymore. | // The constants in the companion object compute scale automatically.
+
+=== TABLE 11 ===
+CHECK || PASS IF
+./gradlew assembleDebug after asset swap || BUILD SUCCESSFUL ΓÇö no missing resource errors
+Open NavigationFragment on device || New floor plan bitmap fills the screen (not old placeholder)
+Log metersToPixels(0f, 0f) || Returns approx (310, 1370)
+Log metersToPixels(0f, 40f) || Returns approx (310, 95) ΓÇö top of corridor
+Log metersToPixels(1.8f, 0f) || Returns approx (399, 1370) ΓÇö right of corridor
+Walk 10 steps North (Y increases) || Blue Dot moves upward on map, not downward
+Walk to corridor center || Blue Dot stays inside the grey corridor strip, not in room area
+
+=== TABLE 12 ===
+SYMPTOM || FIX
+Blue Dot appears at bottom-right corner of screen || ORIGIN_PX_X and ORIGIN_PX_Y are swapped. Check the image: entrance is near pixel (310,1370). X is horizontal, Y is vertical.
+Blue Dot moves DOWN when walking North || The Y-flip formula is missing. PDR +Y = North = UP on map = LOWER pixel value. Formula must be: imagePy = ORIGIN_PX_Y - (yMeters * SCALE_Y)
+Blue Dot moves too fast across the map || Scale factor is wrong. Re-verify: (1370-95)/40.0 = 31.875. If your PNG is a different size than 1024├ù1536, recalculate ORIGIN_PX_Y and STAIR_PX_Y from the actual image.
+OOM crash on large PNG || Add BitmapFactory.Options with inSampleSize=2 in FloorPlanManager.loadFloorPlan(). This halves both dimensions.
+
+=== TABLE 13 ===
+git commit -m "asset: replace floor_plan.png with actual Block C Lab Wing blueprint" | git commit -m "feat(map): FloorPlanManager two-axis calibration ΓÇö 31.9px/m Y, 49.4px/m X"
+
+=== TABLE 14 ===
+T2 || Routing Graph & Node Alignment ΓÇö Block C Lab Wing | ΓÅ▒ ~60 minutes   ┬╖   Priority: HIGH
+
+=== TABLE 15 ===
+// GRAPH TOPOLOGY: | // | // corridor_entrance (0.9, 0.0) | //        |  7.5m | // wp_1324_door (0.9, 7.5) ΓöÇΓöÇΓöÇ 5.1m ΓöÇΓöÇΓöÇ room_1324 (4.8, 4.25) [Classroom] | //        |  1.5m | // wp_1323d_door (0.9, 9.0) ΓöÇΓöÇ 4.2m ΓöÇΓöÇΓöÇ room_1323d (4.8, 10.5) [Lab] | //        |  3.8m | // wp_1323bc (0.9, 12.8) ΓöÇΓöÇΓöÇΓöÇΓöÇ 3.9m ΓöÇΓöÇΓöÇ room_1323bc (4.8, 13.25) [B&C shared] | //        |  1.7m | // wp_1323a (0.9, 14.5) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ 4.2m ΓöÇΓöÇΓöÇ room_1323a (4.8, 16.0) [Lab] | //        |  4.0m | // wp_1322 (0.9, 18.5) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ 4.0m ΓöÇΓöÇΓöÇ room_1322 (4.8, 19.25) [HOD Cabin] | //        |  2.5m | // wp_1321d (0.9, 21.0) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ 4.2m ΓöÇΓöÇΓöÇ room_1321d (4.8, 22.5) [Lab] | //        |  3.8m | // wp_1321bc (0.9, 24.8) ΓöÇΓöÇΓöÇΓöÇΓöÇ 3.9m ΓöÇΓöÇΓöÇ room_1321bc (4.8, 25.25) [B&C shared] | //        |  1.7m | // wp_1321a (0.9, 26.5) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ 4.2m ΓöÇΓöÇΓöÇ room_1321a (4.8, 28.0) [Lab] | //        |  4.0m | // wp_1320 (0.9, 30.5) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ 4.2m ΓöÇΓöÇΓöÇ room_1320 (4.8, 32.0) [Staff Room] | //        |  6.5m | // staircase (0.9, 37.0)
+
+=== TABLE 16 ===
+// ΓöÇΓöÇ NavigationViewModel.kt ΓÇö inside init {} ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // DELETE all old placeholder nodes. Paste this complete replacement block. |  | // ΓöÇΓöÇ CORRIDOR WAYPOINTS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // These nodes define the walking path along the corridor centerline (x=0.9m). | routingEngine.addNode("corridor_entrance", "Entrance",         0.9f,  0.0f) | routingEngine.addNode("wp_1324_door",      "Near 1324",        0.9f,  7.5f) | routingEngine.addNode("wp_1323d_door",     "Near 1323D",       0.9f,  9.0f) | routingEngine.addNode("wp_1323bc",         "Near 1323 B&C",    0.9f, 12.8f) | routingEngine.addNode("wp_1323a",          "Near 1323A",       0.9f, 14.5f) | routingEngine.addNode("wp_1322",           "Near 1322",        0.9f, 18.5f) | routingEngine.addNode("wp_1321d",          "Near 1321D",       0.9f, 21.0f) | routingEngine.addNode("wp_1321bc",         "Near 1321 B&C",    0.9f, 24.8f) | routingEngine.addNode("wp_1321a",          "Near 1321A",       0.9f, 26.5f) | routingEngine.addNode("wp_1320",           "Near 1320",        0.9f, 30.5f) | routingEngine.addNode("staircase",         "Staircase",        0.9f, 37.0f) |  | // ΓöÇΓöÇ ROOM DESTINATION NODES ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // Room center x = 1.8 (corridor width) + 3.0 (half of 6m room) = 4.8m | routingEngine.addNode("room_1324",   "1324 (Classroom)",  4.8f,  4.25f) | routingEngine.addNode("room_1323d",  "1323D (Lab)",       4.8f, 10.5f) | routingEngine.addNode("room_1323bc", "1323 B & C",        4.8f, 13.25f) | routingEngine.addNode("room_1323a",  "1323A (Lab)",       4.8f, 16.0f) | routingEngine.addNode("room_1322",   "1322 HOD Cabin",    4.8f, 19.25f) | routingEngine.addNode("room_1321d",  "1321D (Lab)",       4.8f, 22.5f) | routingEngine.addNode("room_1321bc", "1321 B & C",        4.8f, 25.25f) | routingEngine.addNode("room_1321a",  "1321A (Lab)",       4.8f, 28.0f) | routingEngine.addNode("room_1320",   "1320 Staff Room",   4.8f, 32.0f)
+
+=== TABLE 17 ===
+// ΓöÇΓöÇ CORRIDOR CHAIN EDGES (the walkable path from entrance to staircase) ΓöÇΓöÇΓöÇΓöÇ | routingEngine.addEdge("corridor_entrance", "wp_1324_door")   // 7.5m | routingEngine.addEdge("wp_1324_door",      "wp_1323d_door")  // 1.5m | routingEngine.addEdge("wp_1323d_door",     "wp_1323bc")      // 3.8m | routingEngine.addEdge("wp_1323bc",         "wp_1323a")       // 1.7m | routingEngine.addEdge("wp_1323a",          "wp_1322")        // 4.0m | routingEngine.addEdge("wp_1322",           "wp_1321d")       // 2.5m | routingEngine.addEdge("wp_1321d",          "wp_1321bc")      // 3.8m | routingEngine.addEdge("wp_1321bc",         "wp_1321a")       // 1.7m | routingEngine.addEdge("wp_1321a",          "wp_1320")        // 4.0m | routingEngine.addEdge("wp_1320",           "staircase")      // 6.5m |  | // ΓöÇΓöÇ ROOM SPUR EDGES (corridor waypoint ΓåÆ room entrance) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | routingEngine.addEdge("wp_1324_door",  "room_1324")    // 5.1m spur | routingEngine.addEdge("wp_1323d_door", "room_1323d")   // 4.2m spur | routingEngine.addEdge("wp_1323bc",     "room_1323bc")  // 3.9m spur | routingEngine.addEdge("wp_1323a",      "room_1323a")   // 4.2m spur | routingEngine.addEdge("wp_1322",       "room_1322")    // 4.0m spur | routingEngine.addEdge("wp_1321d",      "room_1321d")   // 4.2m spur | routingEngine.addEdge("wp_1321bc",     "room_1321bc")  // 3.9m spur | routingEngine.addEdge("wp_1321a",      "room_1321a")   // 4.2m spur | routingEngine.addEdge("wp_1320",       "room_1320")    // 4.2m spur
+
+=== TABLE 18 ===
+Route requested || Expected Dijkstra path (node IDs in order)
+Entrance ΓåÆ 1324 || corridor_entrance ΓåÆ wp_1324_door ΓåÆ room_1324
+Entrance ΓåÆ 1322 HOD || corridor_entrance ΓåÆ wp_1324_door ΓåÆ wp_1323d_door ΓåÆ wp_1323bc ΓåÆ wp_1323a ΓåÆ wp_1322 ΓåÆ room_1322
+Entrance ΓåÆ 1320 Staff || corridor_entrance ΓåÆ ... ΓåÆ wp_1320 ΓåÆ room_1320  (all 9 corridor WPs traversed)
+Entrance ΓåÆ Staircase || corridor_entrance ΓåÆ ... ΓåÆ staircase  (10 corridor WPs, no spur)
+1324 ΓåÆ 1323A (cross-room) || room_1324 ΓåÆ wp_1324_door ΓåÆ wp_1323d_door ΓåÆ wp_1323bc ΓåÆ wp_1323a ΓåÆ room_1323a
+
+=== TABLE 19 ===
+CHECK || PASS IF
+Log findPath('corridor_entrance','room_1324') || 2-hop path returned: entranceΓåÆwp_1324_doorΓåÆroom_1324
+Log findPath('corridor_entrance','room_1320') || 10-hop path traversing all waypoints
+Log findPath('room_1324','room_1323a') || 5-hop path via corridor (no teleport)
+findPath to non-existent ID || Returns null, no crash
+Route line on map screen || Dashed teal line starts at entrance, follows corridor strip, branches to room
+Node amber dots on map || Amber circles visible at each waypoint inside the grey corridor strip
+
+=== TABLE 20 ===
+SYMPTOM || FIX
+Route line goes THROUGH room walls (diagonally) || Route should only travel along corridor waypoints first. Room nodes must ONLY connect to their spur waypoint, never to each other directly. Check that no cross-room edges were accidentally added.
+findPath returns null for valid room names || Check that the node ID string passed to findPath() exactly matches the addNode() ID string. IDs are case-sensitive. 'room_1324' Γëá 'Room_1324'.
+Node dots appear outside the building footprint || Node X coordinate should be 0.9 (corridor waypoints) or 4.8 (room centers). Values outside 0ΓÇô7.8 will render off-map. Re-check metersToPixels() is correct first.
+
+=== TABLE 21 ===
+git commit -m "feat(routing): replace placeholder graph with Block C Lab Wing ΓÇö 20 nodes, 19 edges"
+
+=== TABLE 22 ===
+T3 || UI & Destination List Overhaul ΓÇö Real Room Names | ΓÅ▒ ~45 minutes   ┬╖   Priority: MEDIUM
+
+=== TABLE 23 ===
+// ΓöÇΓöÇ NavigationViewModel.kt ΓÇö replace the destinations list ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |  | data class DestinationItem( |     val id: String,           // MUST match RoutingEngine node ID exactly |     val title: String,        // Display name shown to user |     val category: String,     // Used by filter chips |     val subtitle: String = "" // Optional floor/block info | ) |  | val destinations = listOf( |     // ΓöÇΓöÇ LABS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     DestinationItem("room_1323d",  "1323D",    "Lab",        "Block C ┬╖ Floor 3"), |     DestinationItem("room_1323bc", "1323 B&C", "Lab",        "Block C ┬╖ Floor 3"), |     DestinationItem("room_1323a",  "1323A",    "Lab",        "Block C ┬╖ Floor 3"), |     DestinationItem("room_1321d",  "1321D",    "Lab",        "Block C ┬╖ Floor 3"), |     DestinationItem("room_1321bc", "1321 B&C", "Lab",        "Block C ┬╖ Floor 3"), |     DestinationItem("room_1321a",  "1321A",    "Lab",        "Block C ┬╖ Floor 3"), |     // ΓöÇΓöÇ CLASSROOM ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     DestinationItem("room_1324",   "1324",     "Classroom",  "Block C ┬╖ Floor 3"), |     // ΓöÇΓöÇ OFFICES & STAFF ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     DestinationItem("room_1322",   "1322 HOD Cabin",   "Office", "Block C ┬╖ Floor 3"), |     DestinationItem("room_1320",   "1320 Staff Room",  "Staff",  "Block C ┬╖ Floor 3"), |     // ΓöÇΓöÇ EXITS & STAIRS ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     DestinationItem("staircase",       "Staircase (Top)",  "Exit", "North end ┬╖ Floor 3"), |     DestinationItem("corridor_entrance","Entrance",         "Exit", "Ground level"), | )
+
+=== TABLE 24 ===
+<!-- fragment_home.xml ΓÇö replace the entire ChipGroup block ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ --> |  | <com.google.android.material.chip.ChipGroup |     android:id="@+id/chipGroup" |     android:layout_width="match_parent" |     android:layout_height="wrap_content" |     app:singleSelection="true" |     app:selectionRequired="false" |     android:paddingHorizontal="8dp"> |  |     <com.google.android.material.chip.Chip |         android:id="@+id/chipAll" |         android:text="All" |         style="@style/Widget.Material3.Chip.Filter" /> |  |     <com.google.android.material.chip.Chip |         android:id="@+id/chipLab" |         android:text="Labs" |         style="@style/Widget.Material3.Chip.Filter" /> |  |     <com.google.android.material.chip.Chip |         android:id="@+id/chipClassroom" |         android:text="Classroom" |         style="@style/Widget.Material3.Chip.Filter" /> |  |     <com.google.android.material.chip.Chip |         android:id="@+id/chipOffice" |         android:text="Offices" |         style="@style/Widget.Material3.Chip.Filter" /> |  |     <com.google.android.material.chip.Chip |         android:id="@+id/chipExit" |         android:text="Exits &amp; Stairs" |         style="@style/Widget.Material3.Chip.Filter" /> |  | </com.google.android.material.chip.ChipGroup>
+
+=== TABLE 25 ===
+// ΓöÇΓöÇ HomeFragment.kt ΓÇö chip filter observer ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |  | // In onViewCreated, after RecyclerView setup: | binding.chipGroup.setOnCheckedStateChangeListener { group, checkedIds -> |     val filter = when { |         checkedIds.contains(R.id.chipLab)       -> "Lab" |         checkedIds.contains(R.id.chipClassroom) -> "Classroom" |         checkedIds.contains(R.id.chipOffice)    -> "Office" |         checkedIds.contains(R.id.chipExit)      -> "Exit" |         else                                     -> null   // chipAll or none |     } |     val filtered = if (filter == null) { |         vm.destinations |     } else { |         vm.destinations.filter { it.category == filter } |     } |     destinationAdapter.submitList(filtered) | } |  | // Search bar TextWatcher ΓÇö filter by title (case-insensitive): | binding.etDestinationSearch.addTextChangedListener { text -> |     val query = text?.toString()?.trim() ?: "" |     val filtered = vm.destinations.filter { |         it.title.contains(query, ignoreCase = true) || |         it.id.contains(query, ignoreCase = true) |     } |     destinationAdapter.submitList(filtered) | }
+
+=== TABLE 26 ===
+// ΓöÇΓöÇ item_destination.xml ΓÇö each row in the RecyclerView ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // Root: MaterialCardView bg #0D2137, cornerRadius 8dp, margin 4dp | // | // ConstraintLayout: | //   LEFT:  category icon (tinted based on category) | //          Lab ΓåÆ ic_science  (teal  #14FFEC) | //          Classroom ΓåÆ ic_school  (blue  #2979FF) | //          Office/Staff ΓåÆ ic_person  (amber #FFB300) | //          Exit/Stairs ΓåÆ ic_stairs  (muted #546E7A) | // | //   CENTER-TOP:    tvTitle    (bold, #E0F7FA, 15sp) | //   CENTER-BOTTOM: tvSubtitle (muted, #546E7A, 12sp) ΓÇö shows 'Block C ┬╖ Floor 3' | // | //   RIGHT: category badge chip (small, non-clickable) | //          bg color matches icon tint at 20% opacity
+
+=== TABLE 27 ===
+CHECK || PASS IF
+Launch app ΓåÆ Home screen destination list || 11 destinations shown: 6 labs + 1 classroom + 2 offices + 2 exits
+Tap 'Labs' chip || List filters to 6 lab entries only
+Tap 'Offices' chip || List shows: 1322 HOD Cabin, 1320 Staff Room
+Type '132' in search bar || List shows all rooms starting with 132x
+Tap '1322 HOD Cabin' ΓåÆ Navigate || NavigationFragment opens, route to room_1322 drawn on map
+Tap 'Staircase' ΓåÆ Navigate || Route drawn to top of corridor (no room spur, straight to staircase node)
+Check destination ID match || Navigate to each room ΓÇö no 'Route not found' errors
+
+=== TABLE 28 ===
+SYMPTOM || FIX
+'Route not found' for a valid room || The id in DestinationItem does not match the node ID in RoutingEngine. They are case-sensitive strings. Double-check: 'room_1322' in both places.
+Chip filter shows 0 results || The category string in DestinationItem must match exactly: 'Lab', 'Classroom', 'Office', 'Staff', 'Exit'. Check the filter comparison uses == not contains().
+Search returns no results while typing || TextWatcher fires on every keystroke. Confirm the adapter uses submitList() not notifyDataSetChanged() ΓÇö DiffUtil in ListAdapter handles the live updates.
+
+=== TABLE 29 ===
+git commit -m "feat(ui): HomeFragment ΓÇö real Block C room destinations, 5 filter chips, search" | git commit -m "feat(ui): item_destination.xml ΓÇö category icon + badge polish"
+
+=== TABLE 30 ===
+Γ¢│  FINAL ACCEPTANCE ΓÇö All 3 Tasks Complete
+
+=== TABLE 31 ===
+CHECK || HOW TO TEST || PASS IF
+New floor plan renders || Open NavigationFragment || Block C blueprint visible, not placeholder
+Blue Dot at entrance || Stand at physical entrance || Dot at bottom of corridor on map
+Blue Dot tracks North walk || Walk 10 steps up corridor || Dot moves upward ~10 ├ù 0.72 ├ù 31.9px
+Blue Dot inside corridor strip || Walk corridor || Dot stays in 1.8m-wide grey strip, not in rooms
+Route: Entrance ΓåÆ 1324 || Tap 1324, Navigate || Line from bottom to first door on right
+Route: Entrance ΓåÆ 1322 HOD || Tap HOD Cabin, Navigate || Line follows corridor 18.5m then turns right
+Route: Entrance ΓåÆ Staircase || Tap Staircase, Navigate || Line runs full 37m corridor to top
+Cross-room route: 1324 ΓåÆ 1323A || Start near 1324, navigate to 1323A || Correct 5-hop path via corridor
+Labs chip filter || Tap Labs chip || 6 lab entries only
+Search '1322' || Type in search bar || 1322 HOD Cabin appears
+No 'Route not found' errors || Navigate to all 11 destinations || All routes compute successfully
+

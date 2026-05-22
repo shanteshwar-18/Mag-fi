@@ -4,97 +4,152 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.util.Log
-import kotlin.math.pow
-import kotlin.math.sqrt
 
 /**
- * FloorPlanManager — loads the floor plan bitmap from assets and provides
- * coordinate conversion between PDR meter space and canvas pixel space.
+ * FloorPlanManager — loads floor_plan.png from assets and provides the
+ * authoritative pixel ↔ meter coordinate conversion.
  *
- * Calibration: two real-world points are used to derive scalePxPerMeter.
- * The PDR origin (0,0) maps to (originPixelX, originPixelY) on the bitmap.
+ * Block C · Lab Wing · Floor 3
+ * ─────────────────────────────────────────────────────────────────────────
+ * Image: 1024 × 1536 px (not square → DIFFERENT px/m on X and Y axes).
+ * Use SCALE_X_PX_PER_M and SCALE_Y_PX_PER_M separately.
  *
- * Coordinate conventions:
- *   PDR:    X = East (+), Y = North (+)
- *   Canvas: X = right (+), Y = down (+)   → Y-axis is FLIPPED
+ * Coordinate system:
+ *   PDR (x=0, y=0)  = Entrance center at bottom of corridor
+ *   +Y  = North (walking toward staircase / up the map)
+ *   +X  = East  (into the lab rooms, right side of image)
  *
- * metersToPixels: py = originPixelY - (yMeters * scale)   [Y inverted]
+ * Image coordinate system (top-left = 0,0):
+ *   image_px increases rightward
+ *   image_py increases DOWNWARD  ← opposite to PDR +Y
  */
 class FloorPlanManager(private val context: Context) {
 
     companion object {
         private const val TAG = "FloorPlanManager"
-        private const val FLOOR_PLAN_ASSET = "floor_plan.png"
+        private const val ASSET_NAME = "floor_plan.png"
+
+        // ── Image dimensions (do NOT change unless you resize the PNG) ──────
+        const val IMAGE_WIDTH_PX  = 1024f
+        const val IMAGE_HEIGHT_PX = 1536f
+
+        // ── Physical building dimensions ─────────────────────────────────────
+        const val CORRIDOR_LENGTH_M = 40.0f   // Y-axis: entrance → staircase
+        const val BUILDING_WIDTH_M  =  7.8f   // X-axis: left wall → right wall
+
+        // ── Key pixel coordinates IN THE IMAGE (top-left = 0,0) ─────────────
+        // Entrance center (physical origin 0,0):
+        const val ORIGIN_PX_X = 310f   // horizontal pixel of entrance centre
+        const val ORIGIN_PX_Y = 1370f  // vertical pixel of entrance centre
+
+        // Staircase top (40 m North of entrance — directly above entrance):
+        const val STAIR_PX_X = 310f
+        const val STAIR_PX_Y =  95f
+
+        // Building wall pixels for X-axis scale:
+        const val LEFT_WALL_PX  = 235f
+        const val RIGHT_WALL_PX = 620f
+
+        // ── Derived scale factors ────────────────────────────────────────────
+        // Y: (entrance pixel − staircase pixel) / corridor length in metres
+        //    = (1370 − 95) / 40.0 = 31.875 px/m
+        const val SCALE_Y_PX_PER_M =
+            (ORIGIN_PX_Y - STAIR_PX_Y) / CORRIDOR_LENGTH_M  // 31.875f
+
+        // X: building wall span in px / 7.8 m = 385 / 7.8 ≈ 49.36 px/m
+        const val SCALE_X_PX_PER_M =
+            (RIGHT_WALL_PX - LEFT_WALL_PX) / BUILDING_WIDTH_M  // ~49.36f
     }
 
+    // ── Public properties set after loadFloorPlan() ──────────────────────────
     var bitmap: Bitmap? = null
         private set
 
-    /** pixels per meter — set via setScaleFromTwoPoints() */
-    var scalePxPerMeter: Float = 50f
-        private set
+    // Retained for MapCanvasView backward compatibility — set from companion.
+    var originPixelX: Float = ORIGIN_PX_X
+    var originPixelY: Float = ORIGIN_PX_Y
+    var scalePxPerMeter: Float = SCALE_Y_PX_PER_M   // legacy — use two-axis API
 
-    /** pixel coordinates of the PDR origin (0,0) on the bitmap */
-    var originPixelX: Float = 0f
-    var originPixelY: Float = 0f
+    // ── Lifecycle ────────────────────────────────────────────────────────────
 
     /**
      * Load floor_plan.png from assets.
-     * Uses inSampleSize=2 to halve dimensions (OOM protection on low-RAM devices).
-     * Returns true on success, false if asset not found.
+     * Uses inSampleSize=2 to halve memory footprint (large image).
+     * Returns true on success.
      */
     fun loadFloorPlan(): Boolean {
         return try {
-            val opts = BitmapFactory.Options().apply {
-                inSampleSize = 2    // halves each dimension → ¼ RAM usage
+            val options = BitmapFactory.Options().apply {
+                // First pass: just decode bounds
+                inJustDecodeBounds = true
+                context.assets.open(ASSET_NAME).use {
+                    BitmapFactory.decodeStream(it, null, this)
+                }
+                // Decide sample size to avoid OOM on high-res PNG
+                inSampleSize = calculateInSampleSize(outWidth, outHeight, 1024, 1536)
+                inJustDecodeBounds = false
             }
-            val stream = context.assets.open(FLOOR_PLAN_ASSET)
-            bitmap = BitmapFactory.decodeStream(stream, null, opts)
-            stream.close()
-            Log.d(TAG, "Floor plan loaded: ${bitmap?.width}×${bitmap?.height}px")
+            context.assets.open(ASSET_NAME).use { stream ->
+                bitmap = BitmapFactory.decodeStream(stream, null, options)
+            }
+            Log.d(TAG, "Floor plan loaded: ${bitmap?.width}×${bitmap?.height}px " +
+                    "(scaleY=${SCALE_Y_PX_PER_M}px/m, scaleX=${SCALE_X_PX_PER_M}px/m)")
             bitmap != null
         } catch (e: Exception) {
-            Log.e(TAG, "Floor plan load failed: ${e.message}")
+            Log.e(TAG, "Failed to load $ASSET_NAME: ${e.message}")
             false
         }
     }
 
+    // ── Coordinate conversion ────────────────────────────────────────────────
+
     /**
-     * Compute scalePxPerMeter from two calibration landmark points.
+     * Convert PDR meter coordinates → image pixel coordinates.
      *
-     * @param px1, py1   pixel coordinates of landmark 1
-     * @param realMeters1X, realMeters1Y   PDR meter coordinates of landmark 1
-     * @param px2, py2   pixel coordinates of landmark 2
-     * @param realMeters2X, realMeters2Y   PDR meter coordinates of landmark 2
+     * PDR (0,0) = entrance bottom-centre.
+     * +Y North  → image_py DECREASES (upward in image).
+     * +X East   → image_px INCREASES (rightward in image).
      */
+    fun metersToPixels(xMeters: Float, yMeters: Float): Pair<Float, Float> {
+        val imagePx = ORIGIN_PX_X + (xMeters * SCALE_X_PX_PER_M)
+        val imagePy = ORIGIN_PX_Y - (yMeters * SCALE_Y_PX_PER_M)
+        return Pair(imagePx, imagePy)
+    }
+
+    /**
+     * Inverse: image pixel (px, py) → PDR meter coordinates.
+     */
+    fun pixelsToMeters(px: Float, py: Float): Pair<Float, Float> {
+        val xMeters = (px - ORIGIN_PX_X) / SCALE_X_PX_PER_M
+        val yMeters = (ORIGIN_PX_Y - py) / SCALE_Y_PX_PER_M
+        return Pair(xMeters, yMeters)
+    }
+
+    // ── Private helpers ───────────────────────────────────────────────────────
+
+    private fun calculateInSampleSize(
+        width: Int, height: Int,
+        reqWidth: Int, reqHeight: Int
+    ): Int {
+        var inSampleSize = 1
+        if (height > reqHeight || width > reqWidth) {
+            val halfHeight = height / 2
+            val halfWidth  = width  / 2
+            while (halfHeight / inSampleSize >= reqHeight &&
+                   halfWidth  / inSampleSize >= reqWidth) {
+                inSampleSize *= 2
+            }
+        }
+        return inSampleSize
+    }
+
+    // ── Legacy two-point calibration (kept for API compatibility) ─────────────
+    @Deprecated("Use the companion object constants directly — two-axis calibration.")
     fun setScaleFromTwoPoints(
         px1: Float, py1: Float, realMeters1X: Float, realMeters1Y: Float,
         px2: Float, py2: Float, realMeters2X: Float, realMeters2Y: Float
     ) {
-        val pixDist  = sqrt((px2 - px1).pow(2) + (py2 - py1).pow(2))
-        val realDist = sqrt((realMeters2X - realMeters1X).pow(2) + (realMeters2Y - realMeters1Y).pow(2))
-        if (realDist > 0f) {
-            scalePxPerMeter = pixDist / realDist
-            Log.d(TAG, "Scale set: ${scalePxPerMeter}px/m (pixDist=$pixDist, realDist=$realDist)")
-        }
-    }
-
-    /**
-     * Convert PDR meter coordinates → bitmap pixel coordinates.
-     * Note: Y is inverted (PDR north = canvas up = decreasing pixel Y).
-     */
-    fun metersToPixels(xMeters: Float, yMeters: Float): Pair<Float, Float> {
-        val px = originPixelX + (xMeters * scalePxPerMeter)
-        val py = originPixelY - (yMeters * scalePxPerMeter)    // Y flipped
-        return Pair(px, py)
-    }
-
-    /**
-     * Convert bitmap pixel coordinates → PDR meter coordinates.
-     */
-    fun pixelsToMeters(px: Float, py: Float): Pair<Float, Float> {
-        val xMeters = (px - originPixelX) / scalePxPerMeter
-        val yMeters = (originPixelY - py) / scalePxPerMeter    // Y flipped
-        return Pair(xMeters, yMeters)
+        // No-op: scale is now derived from companion constants.
+        Log.w(TAG, "setScaleFromTwoPoints() is deprecated — using companion constants.")
     }
 }

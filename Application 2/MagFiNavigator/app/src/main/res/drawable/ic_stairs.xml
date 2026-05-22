@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+  <!-- Stairs icon -->
+  <path
+      android:fillColor="#546E7A"
+      android:pathData="M3,19h4v-4h4v-4h4V7h6V5h-8v4h-4v4H5v4H3v2z"/>
+</vector>

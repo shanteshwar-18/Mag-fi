@@ -94,73 +94,44 @@
             android:layout_height="wrap_content"
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
-            app:singleSelection="true">
+            app:singleSelection="true"
+            app:selectionRequired="false">
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipLab301"
+                android:id="@+id/chipAll"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Lab 301"
-                android:textColor="@color/colorOnPrimary"
-                app:chipBackgroundColor="@color/colorPrimary"
-                app:chipStrokeColor="@color/colorSecondary"
-                app:chipStrokeWidth="1dp" />
+                android:text="All" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipLab302"
+                android:id="@+id/chipLab"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Lab 302"
-                android:textColor="@color/colorOnPrimary"
-                app:chipBackgroundColor="@color/colorPrimary"
-                app:chipStrokeColor="@color/colorSecondary"
-                app:chipStrokeWidth="1dp" />
+                android:text="Labs" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipLibrary"
+                android:id="@+id/chipClassroom"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Library"
-                android:textColor="@color/colorOnPrimary"
-                app:chipBackgroundColor="@color/colorPrimary"
-                app:chipStrokeColor="@color/colorSecondary"
-                app:chipStrokeWidth="1dp" />
+                android:text="Classroom" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipCafeteria"
+                android:id="@+id/chipOffice"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Cafeteria"
-                android:textColor="@color/colorOnPrimary"
-                app:chipBackgroundColor="@color/colorPrimary"
-                app:chipStrokeColor="@color/colorSecondary"
-                app:chipStrokeWidth="1dp" />
+                android:text="Offices" />
 
             <com.google.android.material.chip.Chip
-                android:id="@+id/chipStairs"
+                android:id="@+id/chipExit"
                 style="@style/Widget.Material3.Chip.Filter"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Stairs"
-                android:textColor="@color/colorOnPrimary"
-                app:chipBackgroundColor="@color/colorPrimary"
-                app:chipStrokeColor="@color/colorSecondary"
-                app:chipStrokeWidth="1dp" />
+                android:text="Exits &amp; Stairs" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipMainExit"
-                style="@style/Widget.Material3.Chip.Filter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Main Exit"
-                android:textColor="@color/colorOnPrimary"
-                app:chipBackgroundColor="@color/colorPrimary"
-                app:chipStrokeColor="@color/colorSecondary"
-                app:chipStrokeWidth="1dp" />
         </com.google.android.material.chip.ChipGroup>
     </HorizontalScrollView>
 

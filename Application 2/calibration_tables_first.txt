@@ -1,0 +1,65 @@
+﻿=== TABLE 0 ===
+MAG-FI NAVIGATOR | APP 2  ┬╖  MAP CALIBRATION & REAL ASSET INTEGRATION | Floor 3 ┬╖ Block C (Lab Wing) ┬╖ 40m Corridor | Team Antigravity Task Tickets ΓÇö 3 Tasks ┬╖ Sequential Execution
+
+=== TABLE 1 ===
+3 | Task Tickets || 20 | Graph Nodes || 19 | Edges || ~3 hrs | Implementation
+
+=== TABLE 2 ===
+ΓûÉ  FLOOR PLAN REFERENCE DATA | Block C ┬╖ Lab Wing ┬╖ Floor 3 ΓÇö Extract from actual blueprint image
+
+=== TABLE 3 ===
+Parameter || Value
+Image file || floor_plan.png  (1024 ├ù 1536 px)
+Total corridor length || 40.0 m (Y-axis, bottom ΓåÆ top)
+Corridor width || 1.8 m (X-axis, 0 ΓåÆ 1.8)
+Room depth (most labs) || 6.0 m (X-axis, 1.8 ΓåÆ 7.8)
+Total building width || 7.8 m
+Origin (0,0) || Entrance center ΓÇö bottom of corridor
+Axis: +Y || North (up the corridor toward staircase)
+Axis: +X || East (into rooms, right side of image)
+Pixel origin (image coords) || approx (310, 1370)  [top-left = (0,0)]
+Scale: Y-axis || 31.9 px/m  (1275 px ├╖ 40.0 m)
+Scale: X-axis || 49.4 px/m  (385 px ├╖ 7.8 m ΓÇö image non-square)
+
+=== TABLE 4 ===
+Room / Feature || Y position (m from entrance) ┬╖ Room height
+Entrance / Origin (0,0) || Y = 0.0 m
+1324 ΓÇö Classroom || Y = 0.0 ΓåÆ 8.5 m  (8.5 m tall room)
+1323D ΓÇö Lab || Y = 8.5 ΓåÆ 12.5 m  (4.0 m)
+1323 B & C ΓÇö shared corridor || Y = 12.5 ΓåÆ 14.0 m  (1.5 m)
+1323A ΓÇö Lab || Y = 14.0 ΓåÆ 18.0 m  (4.0 m)
+1322 ΓÇö HOD Cabin || Y = 18.0 ΓåÆ 20.5 m  (2.5 m)
+1321D ΓÇö Lab || Y = 20.5 ΓåÆ 24.5 m  (4.0 m)
+1321 B & C ΓÇö shared corridor || Y = 24.5 ΓåÆ 26.0 m  (1.5 m)
+1321A ΓÇö Lab || Y = 26.0 ΓåÆ 30.0 m  (4.0 m)
+1320 ΓÇö Staff Room || Y = 30.0 ΓåÆ 34.0 m  (4.0 m)
+Staircase (top) || Y = 34.0 ΓåÆ 40.0 m  (6.0 m)
+
+=== TABLE 5 ===
+T1 || Asset Replacement & Pixel Scale Calibration | ΓÅ▒ ~45 minutes   ┬╖   Priority: CRITICAL
+
+=== TABLE 6 ===
+ΓÜá  The image is 1024├ù1536 px but uses DIFFERENT px/m ratios on X and Y axes (31.9 vs 49.4). The canvas scaling formula in FloorPlanManager and MapCanvasView must account for this. Do NOT use a single scalePxPerMeter ΓÇö use separate scaleX and scaleY.
+
+=== TABLE 7 ===
+1. Delete the old placeholder from: |        app/src/main/assets/floor_plan.png |  | 2. Take the new blueprint image (the one provided by Team Antigravity). |    Rename it exactly: floor_plan.png |    Place it in: app/src/main/assets/floor_plan.png |  | 3. Verify in Android Studio project tree: |    app > src > main > assets > floor_plan.png   ΓåÉ must exist |  | 4. Clean & Rebuild: |    ./gradlew clean assembleDebug
+
+=== TABLE 8 ===
+// ΓöÇΓöÇ FloorPlanManager.kt ΓÇö REPLACE the entire calibration constants block ΓöÇΓöÇΓöÇΓöÇ |  | companion object { |     // ΓöÇΓöÇ Image dimensions (do NOT change unless you resize the PNG) ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     const val IMAGE_WIDTH_PX  = 1024f |     const val IMAGE_HEIGHT_PX = 1536f |  |     // ΓöÇΓöÇ Physical building dimensions ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     const val CORRIDOR_LENGTH_M = 40.0f    // Y-axis: entrance ΓåÆ staircase |     const val BUILDING_WIDTH_M  =  7.8f    // X-axis: left wall ΓåÆ right wall |  |     // ΓöÇΓöÇ Pixel coordinates of key points IN THE IMAGE (top-left = 0,0) ΓöÇΓöÇΓöÇΓöÇΓöÇ |     // These are the pixel positions read from the actual floor_plan.png. |     // If you resize the PNG, these values MUST be recalculated. |     const val ORIGIN_PX_X =  310f    // X pixel of entrance center |     const val ORIGIN_PX_Y = 1370f    // Y pixel of entrance center (image coords) |  |     // Staircase top (40m North of entrance): |     const val STAIR_PX_X  =  310f    // same X ΓÇö it's directly above entrance |     const val STAIR_PX_Y  =   95f    // Y pixel at top of corridor |  |     // ΓöÇΓöÇ Derived scale factors ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |     // Y scale: how many pixels = 1 meter (corridor length axis) |     //   = (ORIGIN_PX_Y - STAIR_PX_Y) / CORRIDOR_LENGTH_M |     //   = (1370 - 95) / 40.0 = 31.875 px/m |     const val SCALE_Y_PX_PER_M = (ORIGIN_PX_Y - STAIR_PX_Y) / CORRIDOR_LENGTH_M |     //   Result: 31.875f |  |     // X scale: right edge of building minus corridor left edge divided by 7.8m |     // Left wall pixel ~ 235px, right wall pixel ~ 620px ΓåÆ span = 385px |     const val LEFT_WALL_PX   = 235f |     const val RIGHT_WALL_PX  = 620f |     const val SCALE_X_PX_PER_M = (RIGHT_WALL_PX - LEFT_WALL_PX) / BUILDING_WIDTH_M |     //   Result: ~49.36f | }
+
+=== TABLE 9 ===
+// ΓöÇΓöÇ FloorPlanManager.kt ΓÇö REPLACE metersToPixels() ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ |  | // Converts PDR meter coordinates (x,y) to image pixel coordinates. | // NOTE: image coordinates have Y increasing DOWNWARD, PDR Y increases NORTHWARD. | // So: image_py = ORIGIN_PX_Y - (y_meters * SCALE_Y_PX_PER_M) | fun metersToPixels(xMeters: Float, yMeters: Float): Pair<Float, Float> { |     val imagePx = ORIGIN_PX_X + (xMeters * SCALE_X_PX_PER_M) |     val imagePy = ORIGIN_PX_Y - (yMeters * SCALE_Y_PX_PER_M) |     return Pair(imagePx, imagePy) | } |  | // Inverse: converts image pixel (px, py) back to meter coordinates. | fun pixelsToMeters(px: Float, py: Float): Pair<Float, Float> { |     val xMeters = (px - ORIGIN_PX_X) / SCALE_X_PX_PER_M |     val yMeters = (ORIGIN_PX_Y - py) / SCALE_Y_PX_PER_M |     return Pair(xMeters, yMeters) | } |  | // ΓöÇΓöÇ MapCanvasView.kt ΓÇö REPLACE metersToCanvas() ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // The canvas stretches the bitmap to fill the View. | // Extra scale factors account for View size vs image size. | // | // fun metersToCanvas(xMeters: Float, yMeters: Float): Pair<Float, Float> { | //     val bmp = floorBitmap ?: return Pair(0f, 0f) | //     val viewScaleX = width.toFloat()  / bmp.width.toFloat() | //     val viewScaleY = height.toFloat() / bmp.height.toFloat() | //     val (imagePx, imagePy) = floorPlanManager.metersToPixels(xMeters, yMeters) | //     return Pair(imagePx * viewScaleX, imagePy * viewScaleY) | // }
+
+=== TABLE 10 ===
+// ΓöÇΓöÇ NavigationViewModel.kt ΓÇö in init {} block ΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇΓöÇ | // Replace the old placeholder calibration call with these exact values: |  | floorPlanManager.originPixelX = FloorPlanManager.ORIGIN_PX_X  // 310f | floorPlanManager.originPixelY = FloorPlanManager.ORIGIN_PX_Y  // 1370f |  | // No need to call setScaleFromTwoPoints() anymore. | // The constants in the companion object compute scale automatically.
+
+=== TABLE 11 ===
+CHECK || PASS IF
+./gradlew assembleDebug after asset swap || BUILD SUCCESSFUL ΓÇö no missing resource errors
+Open NavigationFragment on device || New floor plan bitmap fills the screen (not old placeholder)
+Log metersToPixels(0f, 0f) || Returns approx (310, 1370)
+Log metersToPixels(0f, 40f) || Returns approx (310, 95) ΓÇö top of corridor
+Log metersToPixels(1.8f, 0f) || Returns approx (399, 1370) ΓÇö right of corridor
+Walk 10 steps North (Y increases) || Blue Dot moves upward on map, not downward
+Walk to corridor center || Blue Dot stays inside the grey corridor strip, not in room area
+

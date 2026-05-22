@@ -40,9 +40,12 @@ class MapCanvasView @JvmOverloads constructor(
 
     // ── Public properties — set from NavigationFragment ───────────────────────
     var floorBitmap: Bitmap? = null
-    var scalePxPerMeter: Float = 50f
-    var originPixelX: Float = 0f
-    var originPixelY: Float = 0f
+    /** Inject FloorPlanManager so metersToCanvas() uses two-axis calibration. */
+    var floorPlanManager: FloorPlanManager? = null
+    // Legacy single-axis properties retained for backward compatibility:
+    var scalePxPerMeter: Float = FloorPlanManager.SCALE_Y_PX_PER_M
+    var originPixelX: Float = FloorPlanManager.ORIGIN_PX_X
+    var originPixelY: Float = FloorPlanManager.ORIGIN_PX_Y
     var userPosX: Float = 0f    // in meters
     var userPosY: Float = 0f    // in meters
     var routeNodes: List<GraphNode> = emptyList()
@@ -213,7 +216,10 @@ class MapCanvasView @JvmOverloads constructor(
             while (y < height) { canvas.drawLine(0f, y, width.toFloat(), y, gridPaint); y += step }
             return
         }
-        val rect = RectF(0f, 0f, width.toFloat() / scaleFactor, height.toFloat() / scaleFactor)
+        // Draw bitmap stretched to fill the entire canvas area (pre-scale transform applied by onDraw)
+        val canvasW = width.toFloat()  / scaleFactor
+        val canvasH = height.toFloat() / scaleFactor
+        val rect = RectF(0f, 0f, canvasW, canvasH)
         canvas.drawBitmap(bmp, null, rect, null)
     }
 
@@ -256,15 +262,33 @@ class MapCanvasView @JvmOverloads constructor(
     // ── Coordinate helpers ────────────────────────────────────────────────────
 
     /**
-     * Convert PDR meters → canvas pixels for the current view size.
-     * Accounts for floor plan being drawn scaled to the unzoomed view.
+     * Convert PDR meter coordinates → canvas pixel coordinates.
+     *
+     * Uses FloorPlanManager.metersToPixels() for the correct two-axis
+     * (SCALE_X_PX_PER_M ≠ SCALE_Y_PX_PER_M) conversion, then scales
+     * those image pixels to the actual View size.
      */
     private fun metersToCanvas(xMeters: Float, yMeters: Float): Pair<Float, Float> {
         val bmp = floorBitmap
-        val scaleX = if (bmp != null) (width.toFloat() / scaleFactor) / bmp.width  else 1f
-        val scaleY = if (bmp != null) (height.toFloat() / scaleFactor) / bmp.height else 1f
-        val canvasX = (originPixelX + xMeters * scalePxPerMeter) * scaleX
-        val canvasY = (originPixelY - yMeters * scalePxPerMeter) * scaleY
+        val fm  = floorPlanManager
+
+        val (imagePx, imagePy) = if (fm != null) {
+            // Two-axis: use calibrated manager
+            fm.metersToPixels(xMeters, yMeters)
+        } else {
+            // Fallback: single-axis legacy formula
+            val px = originPixelX + xMeters * scalePxPerMeter
+            val py = originPixelY - yMeters * scalePxPerMeter
+            Pair(px, py)
+        }
+
+        // Scale image pixels → canvas pixels (bitmap is stretched to fill the view)
+        val imgW = bmp?.width?.toFloat()  ?: FloorPlanManager.IMAGE_WIDTH_PX
+        val imgH = bmp?.height?.toFloat() ?: FloorPlanManager.IMAGE_HEIGHT_PX
+        val canvasW = width.toFloat()  / scaleFactor
+        val canvasH = height.toFloat() / scaleFactor
+        val canvasX = imagePx * (canvasW / imgW)
+        val canvasY = imagePy * (canvasH / imgH)
         return Pair(canvasX, canvasY)
     }
 

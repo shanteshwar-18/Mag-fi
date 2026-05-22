@@ -1,0 +1,32 @@
+﻿Room Layout ΓÇö South to North (Entrance ΓåÆ Staircase)
+Objective:
+Replace the placeholder floor_plan.png with the actual Block C Lab Wing blueprint and hardcode the exact pixel-to-meter calibration constants so the Blue Dot aligns correctly with the 40m walking dataset.
+STEP 1 ΓÇö Replace the Image Asset
+STEP 2 ΓÇö Update FloorPlanManager.kt with Real Calibration Constants
+These constants are derived directly from the blueprint image dimensions (1024├ù1536 px) and the known physical measurements on the floor plan. Do not guess ΓÇö use exactly the values below.
+STEP 3 ΓÇö Update metersToPixels() for Non-Square Scale
+The existing metersToPixels() assumes a single uniform scale. Replace it with the two-axis version below. This is the only change to the conversion logic.
+STEP 4 ΓÇö Hardcode the Origin in NavigationViewModel.kt
+Γ£à  VERIFY ΓÇö Task 1
+≡ƒö┤  COMMON ERRORS & FIXES
+≡ƒöº  GIT COMMIT
+Objective:
+Replace every placeholder node in RoutingEngine with the real rooms from the Block C floor plan. All coordinates are in meters from the entrance (0,0). The graph models the walkable corridor as a chain of waypoints, with short spur edges branching into each room.
+Graph Architecture
+The graph has two types of nodes: corridor waypoints (prefixed wp_) and room nodes (prefixed room_). The user always walks along waypoints. Room nodes are leaf nodes connected only to the nearest corridor waypoint. Dijkstra routes through the corridor chain and then takes the spur to the destination room.
+STEP 1 ΓÇö Replace All Nodes in RoutingEngine initialization
+In NavigationViewModel.kt (or wherever you initialize the RoutingEngine graph), delete all existing addNode() and addEdge() calls. Replace with the complete block below.
+STEP 2 ΓÇö Define All Edges
+STEP 3 ΓÇö Verify Dijkstra Routes (expected paths)
+Γ£à  VERIFY ΓÇö Task 2
+≡ƒö┤  COMMON ERRORS & FIXES
+≡ƒöº  GIT COMMIT
+Objective:
+Update HomeFragment's destination list, search bar, and filter chips to use the actual Block C room names. Destination IDs must exactly match the node IDs defined in Task 2 ΓÇö a mismatch here will silently produce 'Route not found' errors.
+STEP 1 ΓÇö Replace Destinations List in NavigationViewModel.kt
+STEP 2 ΓÇö Update Filter Chips in fragment_home.xml
+STEP 3 ΓÇö Wire Chip Filter Logic in HomeFragment.kt
+STEP 4 ΓÇö Update RecyclerView Item Layout (optional visual polish)
+Γ£à  VERIFY ΓÇö Task 3
+≡ƒö┤  COMMON ERRORS & FIXES
+≡ƒöº  GIT COMMIT

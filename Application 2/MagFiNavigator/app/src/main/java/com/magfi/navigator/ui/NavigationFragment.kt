@@ -52,11 +52,13 @@ class NavigationFragment : Fragment() {
 
     private fun setupMapCanvas() {
         val map = binding.mapCanvasView
-        // Pass pre-loaded floor plan data from ViewModel
+        // Inject FloorPlanManager for two-axis calibration
+        map.floorPlanManager = vm.floorPlanManager
         map.floorBitmap      = vm.floorPlanManager.bitmap
-        map.scalePxPerMeter  = vm.floorPlanManager.scalePxPerMeter
-        map.originPixelX     = vm.floorPlanManager.originPixelX
-        map.originPixelY     = vm.floorPlanManager.originPixelY
+        // Legacy properties set to real calibration constants as well
+        map.originPixelX     = com.magfi.navigator.core.FloorPlanManager.ORIGIN_PX_X
+        map.originPixelY     = com.magfi.navigator.core.FloorPlanManager.ORIGIN_PX_Y
+        map.scalePxPerMeter  = com.magfi.navigator.core.FloorPlanManager.SCALE_Y_PX_PER_M
     }
 
     private fun setupObservers() {
@@ -87,6 +89,11 @@ class NavigationFragment : Fragment() {
         }
         vm.fingerprintCount.observe(viewLifecycleOwner) { count ->
             binding.tvFp.text = "$count loaded"
+            // Bitmap loads async — refresh canvas once it's ready
+            if (vm.floorPlanManager.bitmap != null) {
+                binding.mapCanvasView.floorBitmap = vm.floorPlanManager.bitmap
+                binding.mapCanvasView.invalidate()
+            }
         }
 
         // Accuracy state

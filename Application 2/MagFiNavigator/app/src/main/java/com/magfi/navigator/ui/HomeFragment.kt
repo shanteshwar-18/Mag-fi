@@ -9,13 +9,15 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.navigation.fragment.findNavController
-import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.snackbar.Snackbar
 import com.magfi.navigator.R
 import com.magfi.navigator.databinding.FragmentHomeBinding
 import com.magfi.navigator.databinding.ItemDestinationBinding
+import com.magfi.navigator.viewmodel.DestinationItem
 import com.magfi.navigator.viewmodel.NavigationViewModel
 
 class HomeFragment : Fragment() {
@@ -24,16 +26,8 @@ class HomeFragment : Fragment() {
     private val binding get() = _binding!!
     private val vm: NavigationViewModel by activityViewModels()
 
-    private var selectedDestination: String? = null
-
-    // Full list of destinations (matches routing graph nodes)
-    private val allDestinations = listOf(
-        "Lab 301", "Lab 302", "Lab 303", "Library", "Cafeteria",
-        "Stairs North", "Stairs South", "Main Entrance", "Main Exit",
-        "Faculty Office", "Seminar Hall", "Corridor A", "Corridor B"
-    )
-    private val filteredDestinations = mutableListOf<String>().apply { addAll(allDestinations) }
-    private lateinit var adapter: DestinationAdapter
+    private var selectedDestinationId: String? = null
+    private lateinit var destinationAdapter: DestinationAdapter
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -46,30 +40,44 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
 
         setupRecyclerView()
+        setupChipFilter()
         setupSearch()
-        setupChips()
         setupNavigateButton()
+        observeStatus()
 
-        // Update status badge with fingerprint count
-        vm.fingerprintCount.observe(viewLifecycleOwner) { count ->
-            binding.tvStatus.text = if (count > 0)
-                "Map loaded — Floor 1 · $count fingerprints"
-            else
-                "Map loading…"
-        }
+        // Show all destinations initially
+        destinationAdapter.submitList(vm.destinations)
     }
 
+    // ── RecyclerView ──────────────────────────────────────────────────────────
+
     private fun setupRecyclerView() {
-        adapter = DestinationAdapter(filteredDestinations) { dest ->
-            selectedDestination = dest
-            binding.etDestinationSearch.setText(dest)
+        destinationAdapter = DestinationAdapter { dest ->
+            selectedDestinationId = dest.id
+            binding.etDestinationSearch.setText(dest.title)
         }
         binding.rvDestinations.apply {
             layoutManager = LinearLayoutManager(requireContext())
-            this.adapter  = this@HomeFragment.adapter
-            addItemDecoration(DividerItemDecoration(requireContext(), DividerItemDecoration.VERTICAL))
+            adapter = destinationAdapter
         }
     }
+
+    // ── Chip filter ───────────────────────────────────────────────────────────
+
+    private fun setupChipFilter() {
+        binding.chipGroup.setOnCheckedStateChangeListener { _, checkedIds ->
+            val category = when {
+                checkedIds.contains(R.id.chipLab)       -> "Lab"
+                checkedIds.contains(R.id.chipClassroom) -> "Classroom"
+                checkedIds.contains(R.id.chipOffice)    -> "Office"
+                checkedIds.contains(R.id.chipExit)      -> "Exit"
+                else                                     -> null   // "All" or none
+            }
+            applyFilter(query = binding.etDestinationSearch.text?.toString() ?: "", category = category)
+        }
+    }
+
+    // ── Search ────────────────────────────────────────────────────────────────
 
     private fun setupSearch() {
         binding.etDestinationSearch.addTextChangedListener(object : TextWatcher {
@@ -77,52 +85,72 @@ class HomeFragment : Fragment() {
             override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
             override fun afterTextChanged(s: Editable?) {
                 val query = s?.toString() ?: ""
-                filterDestinations(query)
+                val category = getActiveChipCategory()
+                applyFilter(query, category)
             }
         })
     }
 
-    private fun setupChips() {
-        val chips = listOf(
-            binding.chipLab301   to "Lab 301",
-            binding.chipLab302   to "Lab 302",
-            binding.chipLibrary  to "Library",
-            binding.chipCafeteria to "Cafeteria",
-            binding.chipStairs   to "Stairs North",
-            binding.chipMainExit to "Main Exit"
-        )
-        chips.forEach { (chip, label) ->
-            chip.setOnClickListener {
-                selectedDestination = label
-                binding.etDestinationSearch.setText(label)
-                filterDestinations(label)
+    private fun applyFilter(query: String, category: String?) {
+        var filtered = vm.destinations
+        if (!category.isNullOrBlank()) {
+            // "Office" chip also shows "Staff" category
+            filtered = if (category == "Office") {
+                filtered.filter { it.category == "Office" || it.category == "Staff" }
+            } else {
+                filtered.filter { it.category == category }
             }
+        }
+        if (query.isNotBlank()) {
+            filtered = filtered.filter {
+                it.title.contains(query, ignoreCase = true) ||
+                it.id.contains(query, ignoreCase = true)
+            }
+        }
+        destinationAdapter.submitList(filtered)
+    }
+
+    private fun getActiveChipCategory(): String? {
+        val checkedIds = binding.chipGroup.checkedChipIds
+        return when {
+            checkedIds.contains(R.id.chipLab)       -> "Lab"
+            checkedIds.contains(R.id.chipClassroom) -> "Classroom"
+            checkedIds.contains(R.id.chipOffice)    -> "Office"
+            checkedIds.contains(R.id.chipExit)      -> "Exit"
+            else                                     -> null
         }
     }
 
+    // ── Navigate button ───────────────────────────────────────────────────────
+
     private fun setupNavigateButton() {
         binding.fabNavigate.setOnClickListener {
-            val dest = selectedDestination ?: binding.etDestinationSearch.text?.toString()?.trim()
-            if (dest.isNullOrBlank()) {
+            val destId = selectedDestinationId
+                ?: vm.destinations.firstOrNull {
+                    it.title.equals(
+                        binding.etDestinationSearch.text?.toString()?.trim(),
+                        ignoreCase = true
+                    )
+                }?.id
+
+            if (destId.isNullOrBlank()) {
                 Snackbar.make(binding.root, getString(R.string.select_destination), Snackbar.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
-            val action = HomeFragmentDirections
-                .actionHomeFragmentToNavigationFragment(dest)
+            val action = HomeFragmentDirections.actionHomeFragmentToNavigationFragment(destId)
             findNavController().navigate(action)
         }
     }
 
-    private fun filterDestinations(query: String) {
-        filteredDestinations.clear()
-        if (query.isBlank()) {
-            filteredDestinations.addAll(allDestinations)
-        } else {
-            filteredDestinations.addAll(
-                allDestinations.filter { it.contains(query, ignoreCase = true) }
-            )
+    // ── Status badge ──────────────────────────────────────────────────────────
+
+    private fun observeStatus() {
+        vm.fingerprintCount.observe(viewLifecycleOwner) { count ->
+            binding.tvStatus.text = if (count > 0)
+                "Block C · Floor 3 · $count fingerprints"
+            else
+                "Map loading…"
         }
-        adapter.notifyDataSetChanged()
     }
 
     override fun onDestroyView() {
@@ -130,14 +158,14 @@ class HomeFragment : Fragment() {
         _binding = null
     }
 
-    // ── RecyclerView Adapter ─────────────────────────────────────────────────
+    // ── ListAdapter ───────────────────────────────────────────────────────────
 
-    inner class DestinationAdapter(
-        private val items: List<String>,
-        private val onItemClick: (String) -> Unit
-    ) : RecyclerView.Adapter<DestinationAdapter.ViewHolder>() {
+    // Not 'inner' — companion object is prohibited inside inner classes
+    class DestinationAdapter(
+        private val onItemClick: (DestinationItem) -> Unit
+    ) : ListAdapter<DestinationItem, DestinationAdapter.ViewHolder>(DIFF_CALLBACK) {
 
-        inner class ViewHolder(val binding: ItemDestinationBinding) :
+        class ViewHolder(val binding: ItemDestinationBinding) :
             RecyclerView.ViewHolder(binding.root)
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
@@ -148,11 +176,32 @@ class HomeFragment : Fragment() {
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-            val dest = items[position]
-            holder.binding.tvDestinationName.text = dest
+            val dest = getItem(position)
+            holder.binding.tvDestinationName.text     = dest.title
+            holder.binding.tvDestinationSubtitle.text = dest.subtitle
+            holder.binding.tvDestinationCategory.text = dest.category
+
+            // Category icon tint
+            val (iconRes, colorHex) = when (dest.category) {
+                "Lab"       -> Pair(R.drawable.ic_science, "#14FFEC")
+                "Classroom" -> Pair(R.drawable.ic_school,  "#2979FF")
+                "Staff"     -> Pair(R.drawable.ic_person,  "#FFB300")
+                "Office"    -> Pair(R.drawable.ic_person,  "#FFB300")
+                else        -> Pair(R.drawable.ic_stairs,  "#546E7A")
+            }
+            holder.binding.ivCategoryIcon.setImageResource(iconRes)
+            holder.binding.ivCategoryIcon.setColorFilter(
+                android.graphics.Color.parseColor(colorHex)
+            )
+
             holder.itemView.setOnClickListener { onItemClick(dest) }
         }
 
-        override fun getItemCount() = items.size
+        companion object {
+            val DIFF_CALLBACK = object : DiffUtil.ItemCallback<DestinationItem>() {
+                override fun areItemsTheSame(a: DestinationItem, b: DestinationItem) = a.id == b.id
+                override fun areContentsTheSame(a: DestinationItem, b: DestinationItem) = a == b
+            }
+        }
     }
 }
