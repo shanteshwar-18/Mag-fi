@@ -43,6 +43,7 @@ class HomeFragment : Fragment() {
         setupChipFilter()
         setupSearch()
         setupNavigateButton()
+        setupHeaderButtons()
         observeStatus()
 
         // Show all destinations initially
@@ -139,6 +140,17 @@ class HomeFragment : Fragment() {
             }
             val action = HomeFragmentDirections.actionHomeFragmentToNavigationFragment(destId)
             findNavController().navigate(action)
+        }
+    }
+
+    // ── Header buttons ────────────────────────────────────────────────────────
+
+    private fun setupHeaderButtons() {
+        binding.btnDiagnostics.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_diagnosticsFragment)
+        }
+        binding.btnSettings.setOnClickListener {
+            findNavController().navigate(R.id.action_homeFragment_to_settingsFragment)
         }
     }
 

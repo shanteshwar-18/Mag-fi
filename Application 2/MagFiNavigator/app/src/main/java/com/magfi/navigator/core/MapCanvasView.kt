@@ -3,6 +3,7 @@ package com.magfi.navigator.core
 import android.animation.ValueAnimator
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BlurMaskFilter
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.DashPathEffect
@@ -79,14 +80,17 @@ class MapCanvasView @JvmOverloads constructor(
         strokeWidth = 8f
         style       = Paint.Style.STROKE
         pathEffect  = DashPathEffect(floatArrayOf(20f, 10f), 0f)
+        maskFilter  = BlurMaskFilter(6f, BlurMaskFilter.Blur.SOLID)
     }
     private val nodeAmberPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#FFB300")
         style = Paint.Style.FILL
+        maskFilter = BlurMaskFilter(4f, BlurMaskFilter.Blur.SOLID)
     }
     private val nodeDestPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.parseColor("#14FFEC")
         style = Paint.Style.FILL
+        maskFilter = BlurMaskFilter(8f, BlurMaskFilter.Blur.SOLID)
     }
     private val nodeLabelPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color     = Color.parseColor("#E0F7FA")
@@ -94,19 +98,20 @@ class MapCanvasView @JvmOverloads constructor(
         textAlign = Paint.Align.CENTER
     }
     private val dotPulsePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#662979FF")
+        color = Color.parseColor("#663B82F6") // neon blue translucent
         style = Paint.Style.FILL
     }
     private val dotMainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.parseColor("#2979FF")
+        color = Color.parseColor("#3B82F6")
         style = Paint.Style.FILL
+        maskFilter = BlurMaskFilter(10f, BlurMaskFilter.Blur.SOLID)
     }
     private val dotCorePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         color = Color.WHITE
         style = Paint.Style.FILL
     }
     private val gridPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color       = Color.parseColor("#220D2137")
+        color       = Color.parseColor("#2214FFEC")
         strokeWidth = 1f
         style       = Paint.Style.STROKE
     }

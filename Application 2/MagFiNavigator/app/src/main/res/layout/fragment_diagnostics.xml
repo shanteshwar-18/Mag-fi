@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/colorBackground">
+
+    <!-- HEADER -->
+    <LinearLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:background="@color/colorSurface"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageButton
+            android:id="@+id/btnBack"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_revert"
+            app:tint="@color/colorSecondary" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="8dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Sensor Diagnostics"
+                android:textColor="@color/colorOnPrimary"
+                android:textSize="20sp"
+                android:textStyle="bold" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Real-time telemetry"
+                android:textColor="@color/colorSecondary"
+                android:textSize="12sp" />
+        </LinearLayout>
+        
+        <ImageView
+            android:layout_width="12dp"
+            android:layout_height="12dp"
+            android:src="@drawable/ic_launcher_foreground"
+            app:tint="@color/colorNode" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        app:layout_constraintTop_toBottomOf="@id/header"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="16dp">
+
+            <!-- COMPASS -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="#3314FFEC"
+                app:strokeWidth="1dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="24dp"
+                    android:gravity="center">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="HEADING"
+                        android:textColor="@color/colorSecondary"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="16dp" />
+
+                    <TextView
+                        android:id="@+id/tvHeadingDiag"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0°"
+                        android:textColor="@color/colorOnPrimary"
+                        android:textSize="48sp"
+                        android:textStyle="bold"
+                        android:fontFamily="sans-serif-condensed" />
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- ACCELEROMETER -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="#3314FFEC"
+                app:strokeWidth="1dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="ACCELEROMETER"
+                        android:textColor="@color/colorSecondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        
+                        <!-- X -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1A14FFEC">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="X-Axis" android:textColor="@color/colorSecondary" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvAccelX" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.00" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="m/s²" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+                        
+                        <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+                        
+                        <!-- Y -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1A14FFEC">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Y-Axis" android:textColor="@color/colorSecondary" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvAccelY" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.00" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="m/s²" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+                        
+                        <!-- Z -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1A14FFEC">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Z-Axis" android:textColor="@color/colorSecondary" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvAccelZ" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.00" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="m/s²" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- MAGNETOMETER -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="#3314FFEC"
+                app:strokeWidth="1dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="MAGNETOMETER"
+                        android:textColor="#A855F7"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        
+                        <!-- X -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1AA855F7">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="X-Axis" android:textColor="#A855F7" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvMagX" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.00" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="μT" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+                        
+                        <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+                        
+                        <!-- Y -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1AA855F7">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Y-Axis" android:textColor="#A855F7" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvMagY" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.00" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="μT" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+
+                        <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+                        
+                        <!-- Z -->
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1AA855F7">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Z-Axis" android:textColor="#A855F7" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvMagZ" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0.00" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="μT" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <!-- WI-FI & FINGERPRINTS -->
+            <com.google.android.material.card.MaterialCardView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:cardBackgroundColor="@color/colorSurface"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="#3314FFEC"
+                app:strokeWidth="1dp">
+                
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:padding="16dp">
+                    
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="WI-FI RSSI &amp; DB"
+                        android:textColor="@color/colorSecondary"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:layout_marginBottom="12dp" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+                        
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1A14FFEC">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="STRONGEST AP" android:textColor="@color/colorSecondary" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvWifi" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="N/A" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:id="@+id/tvWifiStr" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="-- dBm" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+                        
+                        <Space android:layout_width="8dp" android:layout_height="wrap_content" />
+                        
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:padding="8dp"
+                            android:background="#1A14FFEC">
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="FINGERPRINTS" android:textColor="@color/colorSecondary" android:textSize="10sp" />
+                            <TextView android:id="@+id/tvFpCount" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="@color/colorOnPrimary" android:textSize="20sp" android:textStyle="bold" android:fontFamily="monospace" />
+                            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="loaded in memory" android:textColor="@color/colorTextMuted" android:textSize="10sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+        </LinearLayout>
+    </ScrollView>
+</androidx.constraintlayout.widget.ConstraintLayout>

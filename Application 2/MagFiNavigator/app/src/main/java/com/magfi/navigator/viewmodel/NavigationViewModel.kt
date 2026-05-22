@@ -258,6 +258,10 @@ class NavigationViewModel(application: Application) : AndroidViewModel(applicati
         engine.stop()
         wifiScanner.stop()
     }
+    
+    fun triggerCalibration(bx: Float, by: Float) {
+        headingEstimator.calibrate(bx, by)
+    }
 
     override fun onCleared() {
         super.onCleared()

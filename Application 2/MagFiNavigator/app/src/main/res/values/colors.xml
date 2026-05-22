@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Primary palette -->
-    <color name="colorPrimary">#0D2137</color>
+    <color name="colorPrimary">#0B132B</color>
     <color name="colorSecondary">#14FFEC</color>
-    <color name="colorSurface">#1B2A4A</color>
-    <color name="colorBackground">#0D2137</color>
+    <color name="colorSurface">#1C2541</color>
+    <color name="colorBackground">#0B132B</color>
 
     <!-- Text -->
-    <color name="colorOnPrimary">#E0F7FA</color>
-    <color name="colorTextMuted">#546E7A</color>
-    <color name="colorError">#C62828</color>
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorTextMuted">#94A3B8</color>
+    <color name="colorError">#EF4444</color>
 
     <!-- Accent elements -->
-    <color name="colorBlueDot">#2979FF</color>
+    <color name="colorBlueDot">#3B82F6</color>
     <color name="colorRoute">#14FFEC</color>
     <color name="colorNode">#FFB300</color>
 
     <!-- Transparent variants -->
     <color name="colorAccentTrans20">#3314FFEC</color>
-    <color name="colorErrorTrans20">#33C62828</color>
+    <color name="colorErrorTrans20">#33EF4444</color>
 </resources>
