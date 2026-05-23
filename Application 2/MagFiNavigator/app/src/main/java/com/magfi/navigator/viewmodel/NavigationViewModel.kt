@@ -158,8 +158,9 @@ class NavigationViewModel(application: Application) : AndroidViewModel(applicati
     }
 
     /**
-     * Block C Lab Wing routing graph.
+     * Block C Lab Wing routing graph — updated for dataset 20260523_084454.
      *
+     * New dataset covers 90 PDR steps from Y=0.00 to Y=49.59m (extended corridor).
      * Two node types:
      *   corridor_* / wp_* — walkable corridor waypoints along centre-line (x = 0.9 m)
      *   room_*            — destination leaf nodes at room centre (x = 4.8 m)
@@ -179,7 +180,11 @@ class NavigationViewModel(application: Application) : AndroidViewModel(applicati
         routingEngine.addNode("wp_1321bc",         0.9f, 24.8f)
         routingEngine.addNode("wp_1321a",          0.9f, 26.5f)
         routingEngine.addNode("wp_1320",           0.9f, 30.5f)
+        // Extended waypoints from the new 90-step dataset (Y ~37–49m)
         routingEngine.addNode("staircase",         0.9f, 37.0f)
+        routingEngine.addNode("wp_ext_41",         0.9f, 41.0f)
+        routingEngine.addNode("wp_ext_45",         0.9f, 45.0f)
+        routingEngine.addNode("corridor_end",      0.9f, 49.0f)
 
         // ── ROOM DESTINATION NODES (leaf nodes — enter via spur) ───────────────
         // Room centre X = corridor width (1.8m) + half room depth (3.0m) = 4.8m
@@ -204,6 +209,10 @@ class NavigationViewModel(application: Application) : AndroidViewModel(applicati
         routingEngine.addEdge("wp_1321bc",         "wp_1321a")       // 1.7 m
         routingEngine.addEdge("wp_1321a",          "wp_1320")        // 4.0 m
         routingEngine.addEdge("wp_1320",           "staircase")      // 6.5 m
+        // Extended corridor chain (new data coverage)
+        routingEngine.addEdge("staircase",         "wp_ext_41")      // 4.0 m
+        routingEngine.addEdge("wp_ext_41",         "wp_ext_45")      // 4.0 m
+        routingEngine.addEdge("wp_ext_45",         "corridor_end")   // 4.0 m
 
         // ── ROOM SPUR EDGES (corridor waypoint → room, one spur only) ─────────
         routingEngine.addEdge("wp_1324_door",  "room_1324")    // 5.1 m

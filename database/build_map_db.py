@@ -302,7 +302,7 @@ if __name__ == "__main__":
     # can be run from any working directory.
     SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
-    CSV_INPUT  = os.path.join(SCRIPT_DIR, "raw_mapping_1_3_20260521_173715.csv")
+    CSV_INPUT  = os.path.join(SCRIPT_DIR, "raw_mapping_1_3_20260523_084454.csv")
     DB_OUTPUT  = os.path.join(SCRIPT_DIR, "map_database.db")
 
     build_localization_db(CSV_INPUT, DB_OUTPUT)
